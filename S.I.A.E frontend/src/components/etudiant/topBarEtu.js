@@ -3,6 +3,7 @@ import { UserContext } from "../../App";
 import { Navigate, useNavigate } from "react-router-dom";
 import Login from "../auth/login";
 import swal from "sweetalert";
+import api from "../API/api";
 
 function TopNavBar() {
     const navigate = useNavigate();
@@ -37,10 +38,14 @@ function TopNavBar() {
         });
 
         setTimeout(() => {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            setUser(null);
-            navigate('/');
+            api.post('/logout')
+                .then((rep) => {
+                    console.log(rep.data.message);
+                    localStorage.removeItem('user');
+                    setUser(undefined);
+                    navigate('/', { replace: true });
+                })
+
         }, 2000);
 
     }

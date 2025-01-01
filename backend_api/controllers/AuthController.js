@@ -20,7 +20,7 @@ async function login(req, res) {
             return res.json({ message: 'Mot de passe incorrect' });
         }
 
-        const etudiants = await etudiant.findOne({ utilisateur: utilisateur._id });
+        // const etudiants = await etudiant.findOne({ utilisateur: utilisateur._id });
 
         const token = jwt.sign(
             {
@@ -37,11 +37,11 @@ async function login(req, res) {
             httpOnly: true,
             secure: true,
             sameSite: 'Strict',
-            maxAge: 15 * 60 * 1000,
+            maxAge: 60 * 60 * 1000,
         });
 
         return res.json({
-            succes: 'Authemtification reussie',
+            succes: 'Authentification reussie',
             token,
             utilisateur: {
                 id_ut: utilisateur.id_ut,
@@ -59,6 +59,13 @@ async function login(req, res) {
         // console.error(error);
         return res.json({ message: 'Erreur lors de la connexion' });
     }
+}
+
+async function logout(req, res) {
+    res.clearCookie('token', { hhtpPnly: true, secure: true });
+    res.json({
+        message: "Deconnexion reussie"
+    });
 }
 
 async function inscription(req, res) {
@@ -110,7 +117,7 @@ async function inscription(req, res) {
 }
 
 async function verifieToken(req, res, next) {
-    const token = res.cookies.token;
+    const token = req.cookies.token;
 
     if (!token) {
         return res.json({
@@ -129,28 +136,28 @@ async function verifieToken(req, res, next) {
     }
 }
 
-async function getUtilisateur(req, res, next) {
-    const authHeader = req.headers.authorization;
+async function getUtilisateur(req, res) {
+    // const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.json({
-            message: "Token manquant ou invalide"
-        });
-    }
+    // if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    //     return res.json({
+    //         message: "Token manquant ou invalide"
+    //     });
+    // }
 
-    const token = authHeader.split(' ')[1];
+    // const token = authHeader.split(' ')[1];
 
     try {
-        const decoded = jwt.verify(token, secretKey);
+        // const decoded = jwt.verify(token, secretKey);
 
-        const utilisateur = await Utilisateurs.findById(decoded.id);
+        const utilisateur = await Utilisateurs.findById(req.user.id);
         if (!utilisateur) {
             return res.json({
                 message: "Utilisateur non trouve"
             });
         }
-        req.user = decoded;
-        next();
+        // req.user = decoded;
+        // next();
 
         return res.json({
             message: "Success",
@@ -189,4 +196,4 @@ async function authentificate(req, res, next) {
     }
 }
 
-module.exports = { login, inscription, getUtilisateur, authentificate, verifieToken };
+module.exports = { login, logout, inscription, getUtilisateur, authentificate, verifieToken };

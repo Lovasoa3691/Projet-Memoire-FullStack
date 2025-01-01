@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser')
 
 const salleRoute = require('./routes/SalleRoutes');
 const etuRoute = require('./routes/etudiantRoute');
@@ -16,7 +17,12 @@ const PORT = 5000;
 
 app.use(express.json());
 app.use(bodyParser.json());
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:3000', // Spécifiez votre origine front-end
+    credentials: true, // Permet l'envoi des cookies
+}));
+app.use(cookieParser());
 
 mongoose.connect('mongodb://localhost:27017/systeme_inscription', {
     useNewUrlParser: true,

@@ -21,12 +21,12 @@ function Home() {
     const [myToken, setMyToken] = useState('');
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            setMyToken(token);
-        } else {
-            console.log("Aucun token trouve");
-        }
+        // const token = localStorage.getItem('token');
+        // if (token) {
+        //     setMyToken(token);
+        // } else {
+        //     console.log("Aucun token trouve");
+        // }
         document.title = `${currentPage} - Mon Application`;
     }, []);
 

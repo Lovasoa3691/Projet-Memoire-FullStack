@@ -3,6 +3,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import axios from "axios";
 import swal from "sweetalert";
 import { UserContext } from "../../App";
+import api from "../API/api";
 
 function Login() {
 
@@ -35,14 +36,13 @@ function Login() {
     const handleConnecting = (e) => {
         e.preventDefault();
         // setLoading(true);
-        axios.post('http://localhost:5000/api/login',
-            { email: mail, mdp: mdp }
-        )
+
+        api.post('/login', { email: mail, mdp: mdp })
             .then((rep) => {
 
                 if (rep.data.succes) {
                     const { token, utilisateur } = rep.data;
-                    localStorage.setItem('token', token);
+                    // localStorage.setItem('token', token);
 
                     const Infoutilisateur = {
                         idUt: rep.data.utilisateur['id_ut'],

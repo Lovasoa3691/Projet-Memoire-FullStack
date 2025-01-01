@@ -20,6 +20,7 @@ import HomeEtudiant from './components/etudiant/homeEtu';
 import { BrowserRouter as Router, Route, Routes, useNavigate, Navigate } from 'react-router-dom';
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { ClipLoader } from "react-spinners";
+import api from './components/API/api';
 
 // import { LoadingProvider } from './components/spinner/loadingSpinner';
 
@@ -57,59 +58,83 @@ function App() {
     };
   }, []);
 
-  const [user, setUser] = useState(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return null;
+  // const [user, setUser] = useState(() => {
+  //   // const token = localStorage.getItem('token');
+  //   // if (!token) return null;
 
-    const userFromStorage = localStorage.getItem('user');
-    return userFromStorage ? JSON.parse(userFromStorage) : null;
-  });
+  //   const userFromStorage = localStorage.getItem('user');
+  //   return userFromStorage ? JSON.parse(userFromStorage) : null;
+  // });
 
-  const [isConnecte, setIsConnecte] = useState(false);
-  const [UType, setUType] = useState(null);
+  const [user, setUser] = useState(undefined);
+
 
   useEffect(() => {
-    const usersdata = localStorage.getItem('user');
-    if (usersdata) {
-      const parsedUser = JSON.parse(usersdata);
-      setIsConnecte(true);
-      setUType(parsedUser.role);
-    } else {
-      setIsConnecte(false);
+    const saveduser = localStorage.getItem('user');
+
+    if (saveduser) {
+      setUser(JSON.parse(saveduser));
     }
-  }, []);
 
+    api.get('/utilisateur')
+      .then((rep) => {
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
+        console.log(rep.data.message);
+        console.log(rep.data);
 
-      axios.get('http://localhost:5000/api/utilisateur', {
-        headers: { Authorization: `Bearer ${token}` },
+        const utilisateurConnecte = {
+          idUt: rep.data.utilisateur['id_ut'],
+          nomUt: rep.data.utilisateur['nom_ut'],
+          mail: rep.data.utilisateur['email'],
+          role: rep.data.utilisateur['role'],
+        };
+
+        setUser(utilisateurConnecte);
+        localStorage.setItem('user', JSON.stringify(utilisateurConnecte));
+
       })
-        .then((rep) => {
-          // console.log(rep.data.utilisateur);
-          const utilisateur = {
-            idUt: rep.data.utilisateur['id_ut'],
-            nomUt: rep.data.utilisateur['nom_ut'],
-            mail: rep.data.utilisateur['email'],
-            role: rep.data.utilisateur['role'],
-          };
-
-          setUser(utilisateur);
-          localStorage.setItem('user', JSON.stringify(utilisateur));
-
-        })
-        .catch(() => {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          setUser(null);
-        })
-    }
+      .catch((error) => {
+        console.log("Erreur: ", error);
+        localStorage.removeItem('user');
+        setUser(null);
+      })
   }, []);
+
+
+  // useEffect(() => {
+  //   const token = localStorage.getItem('token');
+  //   if (token) {
+
+  //     axios.get('http://localhost:5000/api/utilisateur', {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     })
+  //       .then((rep) => {
+  //         // console.log(rep.data.utilisateur);
+  //         const utilisateur = {
+  //           idUt: rep.data.utilisateur['id_ut'],
+  //           nomUt: rep.data.utilisateur['nom_ut'],
+  //           mail: rep.data.utilisateur['email'],
+  //           role: rep.data.utilisateur['role'],
+  //         };
+
+  //         setUser(utilisateur);
+  //         localStorage.setItem('user', JSON.stringify(utilisateur));
+
+  //       })
+  //       .catch(() => {
+  //         localStorage.removeItem('token');
+  //         localStorage.removeItem('user');
+  //         setUser(null);
+  //       })
+  //   }
+  // }, []);
 
   const RouteProteger = ({ children, role }) => {
     const { user } = useContext(UserContext);
+
+    if (user === undefined) {
+      return <div>Chergement...</div>;
+    }
 
     if (!user) {
       return <Navigate to="/" replace />;
