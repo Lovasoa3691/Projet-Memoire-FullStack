@@ -39,5 +39,42 @@ async function getExamen(req, res) {
 
 }
 
-module.exports = { getExamen };
+async function mettreAjourStatutExam(req, res) {
+    try {
+        const now = new Date();
+
+        const exams = await examen.find({ dateExam: { $gte: new Date().setHours(0, 0, 0, 0) } });
+
+        const AJour = await Promise.all(
+            exams.map(async (exam) => {
+                const examStart = new Date(exam.dateExam);
+                examStart.setHours(exam.heureDebut.split(':')[0], exam.heureFin.split(':')[1]);
+
+                const examEnd = new Date(exam.dateExam);
+                examEnd.setHours(exam.heureDebut.split(':')[0], exam.heureFin.split(':')[1]);
+
+                if (now > examEnd) {
+                    return await examen.findByIdAndUpdate(
+                        exam._id,
+                        { statut: 'Termine' },
+                        { new: true }
+                    );
+                }
+                return exam;
+            })
+        );
+
+        res.json({
+            succes: true,
+            examMiseAJour: AJour
+        });
+    } catch (error) {
+        res.json({
+            succes: false,
+            erreur: error.message
+        });
+    }
+}
+
+module.exports = { getExamen, mettreAjourStatutExam };
 

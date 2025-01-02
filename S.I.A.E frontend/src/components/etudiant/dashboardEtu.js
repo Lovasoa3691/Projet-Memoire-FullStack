@@ -7,6 +7,7 @@ import swal from "sweetalert";
 
 import { Sparklines, SparklinesLine, SparklinesBars, SparklinesSpots } from "react-sparklines";
 import axios from "axios";
+import api from "../API/api";
 
 
 const Dashboard = () => {
@@ -125,10 +126,16 @@ const Dashboard = () => {
 
     useEffect(() => {
         // getCountStudent();
+        const interval = setInterval(() => {
+            getNotificationRecents();
+        }, 10000);
+
+        return () => clearInterval(interval);
     }, []);
 
     const data = [5, 10, 5, 20, 8, 15, 12, 18, 25];
     const [EtuData, setEtuData] = useState("");
+    const [notificationRecent, setNotificationRecent] = useState([]);
 
     const getCountStudent = () => {
         axios.get('http://localhost:5000/api/etudiants/count')
@@ -137,6 +144,14 @@ const Dashboard = () => {
             })
             .catch((rep) => {
                 console.log(rep.message);
+            })
+    }
+
+    const getNotificationRecents = () => {
+        api.get('/notification/recents')
+            .then((rep) => {
+                // console.log(rep.data)
+                setNotificationRecent(rep.data);
             })
     }
 
@@ -249,7 +264,7 @@ const Dashboard = () => {
 
                                         <div key={index} data-key={not.id} className={not.statut === "non lu" ? "fw-bold" : ""}>
                                             <div className="d-flex">
-                                                <div className="avatar avatar-online">
+                                                <div className="avatar ">
                                                     <span
                                                         className="avatar-title rounded-circle border border-white"
                                                         style={{ backgroundColor: getColorForLetter(not.nom.charAt(0)) }}

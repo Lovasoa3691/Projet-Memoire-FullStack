@@ -10,28 +10,43 @@ import ExamenContent from './examenEtu';
 import MyExamContent from './mes_examens';
 import NotificationContent from './notification';
 import HistoriqueContent from './historique';
+import api from '../API/api';
 
 
 function Home() {
 
-    const [isActive, setActive] = useState('');
+    const [isActive, setActive] = useState('dashboard');
+
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const [currentPage, setCurrentPage] = useState("Tableau de bord");
-    const [myToken, setMyToken] = useState('');
+    const [newNotification, setNewNotification] = useState(() => {
+        return localStorage.getItem("countNotify") || '0';
+    });
 
     useEffect(() => {
-        // const token = localStorage.getItem('token');
-        // if (token) {
-        //     setMyToken(token);
-        // } else {
-        //     console.log("Aucun token trouve");
-        // }
         document.title = `${currentPage} - Mon Application`;
+        const interval = setInterval(() => {
+            actualiseNotification();
+        }, 5000);
+
+        return () => clearInterval(interval);
     }, []);
+
+    const actualiseNotification = () => {
+        api.get('/notification/count')
+            .then((rep) => {
+                // console.log(rep.data.count)
+                if (rep.data.count !== '0') {
+                    setNewNotification(rep.data.count);
+                }
+
+            })
+    }
 
     const menuClick = (menu, path) => {
         setActive(menu);
+        localStorage.setItem("menuActive", menu);
         setLoading(true);
         setCurrentPage(menu);
         setTimeout(() => {
@@ -143,7 +158,15 @@ function Home() {
                                 >
                                     <i className="fas fa-bell"></i>
                                     <p>Notifications</p>
-                                    <span className="badge badge-danger">4</span>
+                                    {
+                                        newNotification === 0 ?
+                                            (
+                                                <span></span>
+                                            ) : (
+                                                <span className="badge badge-danger">{newNotification}</span>
+                                            )
+                                    }
+
                                     {/* <span className="caret"></span> */}
                                 </Link>
                             </li>

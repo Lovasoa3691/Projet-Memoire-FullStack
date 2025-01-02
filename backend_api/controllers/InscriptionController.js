@@ -3,6 +3,9 @@ const paiement = require('../models/paiement');
 const examen = require('../models/examen');
 const etudiant = require('../models/etudiant');
 const Utilisateurs = require('../models/utilisateurs');
+const notification = require('../models/notification');
+const notificationEtu = require('../models/notificationEtudiant');
+const Counter = require('../models/counter');
 
 async function CreerInscription(req, res) {
     try {
@@ -39,6 +42,28 @@ async function CreerInscription(req, res) {
 
         const paiementsManquantes = moisrequis.filter(m => !moisPayes.includes(m));
 
+
+
+        const seqNumber = await getNextSequenceValue('notificationId');
+        const idNot = `NOT_${seqNumber.toString().padStart(2, '0')}`;
+
+        const newNotification = new notification({
+            idNot: idNot,
+            titre: "Inscription a l'examen ...",
+            objet: "Votre inscription a l'examen ... du ... est valide.",
+            dateEnvoi: new Date()
+        })
+
+        await newNotification.save();
+
+        const newNotificationEtudiant = new notificationEtu({
+            etuMatricule: etudiantId,
+            idNot: idNot,
+            dateRecept: new Date()
+        });
+
+        await newNotificationEtudiant.save();
+
         if (paiementsManquantes.length > 0) {
             return res.json({
                 erreur: "Paiements incomplets",
@@ -46,11 +71,11 @@ async function CreerInscription(req, res) {
             })
         }
 
-        const incrip = new inscription({
-            etudiantMatricule: matriculeId,
-            idExam: idExam,
-            statutIns: 'Valide'
-        });
+        // const incrip = new inscription({
+        //     etudiantMatricule: etudiantId,
+        //     idExam: idExamen,
+        //     statutIns: 'Valide'
+        // });
 
         // await incrip.save();
 
@@ -59,11 +84,22 @@ async function CreerInscription(req, res) {
         });
 
     } catch (error) {
+        console.log(error)
         res.json({
             message: 'Erreur de server'
         });
 
     }
+}
+
+async function getNextSequenceValue(seq) {
+    const counter = await Counter.findByIdAndUpdate(
+        { _id: seq },
+        { $inc: { sequence_value: 1 } },
+        { new: true, upsert: true }
+    );
+
+    return counter.sequence_value
 }
 
 

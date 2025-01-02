@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios';
 import swal from 'sweetalert';
 import NProgress from 'nprogress';
+import api from '../API/api';
 
 function ExamenContent() {
 
@@ -14,22 +15,23 @@ function ExamenContent() {
     // }, []);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
+        // const token = localStorage.getItem('token');
+        // if (token) {
 
-            axios.get('http://localhost:5000/api/examens', {
-                headers: { Authorization: `Bearer ${token}` },
+        // axios.get('http://localhost:5000/api/examens', {
+        //     headers: { Authorization: `Bearer ${token}` },
+        // })
+        api.get('/examens')
+            .then((rep) => {
+                // console.log(rep.data.etu);
+                setMatriculeEtu(rep.data.etu['matricule']);
+                setExamensDispo(rep.data.examens);
             })
-                .then((rep) => {
-                    // console.log(rep.data.etu);
-                    setMatriculeEtu(rep.data.etu['matricule']);
-                    setExamensDispo(rep.data.examens);
-                })
-                .catch((error) => {
-                    localStorage.removeItem('token');
-                    console.log("Erreur lors de la recuperation des donnees: ", error);
-                })
-        }
+            .catch((error) => {
+                localStorage.removeItem('token');
+                console.log("Erreur lors de la recuperation des donnees: ", error);
+            })
+        // }
     }, []);
 
     const handleInscription = async (etudiantId, idExamen, dateExam) => {
@@ -40,7 +42,7 @@ function ExamenContent() {
                 etudiantId, idExamen, dateExam
             });
 
-            console.log({ etudiantId, idExamen, dateExam })
+            // console.log({ etudiantId, idExamen, dateExam })
 
             swal({
                 title: "Verification en cours...",
@@ -54,7 +56,7 @@ function ExamenContent() {
                 NProgress.done();
                 if (rep.data.erreur) {
                     swal("Erreur!", rep.data.erreur, "error");
-                    console.log(rep.data.paiementsManquantes)
+                    // console.log(rep.data.paiementsManquantes)
                 } else if (rep.data.succes) {
                     swal("Termine!", rep.data.succes, "success");
                 } else {

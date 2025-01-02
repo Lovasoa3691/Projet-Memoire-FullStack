@@ -30,7 +30,7 @@ async function login(req, res) {
                 role: utilisateur.role,
             },
             secretKey,
-            { expiresIn: '15m' }
+            { expiresIn: '1h' }
         );
 
         res.cookie('token', token, {

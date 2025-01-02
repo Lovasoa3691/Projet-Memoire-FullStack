@@ -79,8 +79,8 @@ function App() {
     api.get('/utilisateur')
       .then((rep) => {
 
-        console.log(rep.data.message);
-        console.log(rep.data);
+        // console.log(rep.data.message);
+        // console.log(rep.data);
 
         const utilisateurConnecte = {
           idUt: rep.data.utilisateur['id_ut'],

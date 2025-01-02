@@ -10,6 +10,7 @@ const etuRoute = require('./routes/etudiantRoute');
 const smsRoute = require('./routes/smsRoute');
 const authRoutes = require('./routes/authRoutes')
 const examRoutes = require('./routes/examRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
 const PORT = 5000;
@@ -36,6 +37,7 @@ app.use('/api', etuRoute);
 app.use('/api', smsRoute);
 app.use('/api', authRoutes);
 app.use('/api', examRoutes);
+app.use('/api', notificationRoutes);
 
 app.listen(PORT, () => {
     console.log('Serveur en cours sur le port: ', PORT);

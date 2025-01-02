@@ -3,9 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 
 function NavBar() {
 
-    const [isActive, setActive] = useState('');
     const navigate = useNavigate();
     const [currentPage, setCurrentPage] = useState("Tableau de bord");
+
+    const [isActive, setActive] = useState(() => {
+        return localStorage.getItem("activeMenu") || "dashboard";
+    });
 
     useEffect(() => {
         document.title = `${currentPage} - Mon Application`;
@@ -13,6 +16,7 @@ function NavBar() {
 
     const menuClick = (menu, path) => {
         setActive(menu);
+        localStorage.setItem("activeMenu", menu);
         // setLoading(true);
         setCurrentPage(menu);
         setTimeout(() => {

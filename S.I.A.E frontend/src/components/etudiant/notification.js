@@ -1,16 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useState } from 'react';
 import swal from 'sweetalert';
+import api from '../API/api';
+import Swal from 'sweetalert2';
 
 
 function NotificationContent() {
 
 
 
-    const getCurrentDateTime = () => {
-        const current = new Date();
+    const formatDate = (dateReception) => {
+        const current = new Date(dateReception);
         const year = current.getFullYear();
-        const month = String(current.getMonth() + 1).padStart(2, '0'); // Ajout de 1 car les mois commencent à 0
+        const month = String(current.getMonth() + 1).padStart(2, '0');
         const day = String(current.getDate()).padStart(2, '0');
         const hours = String(current.getHours()).padStart(2, '0');
         const minutes = String(current.getMinutes()).padStart(2, '0');
@@ -18,26 +20,8 @@ function NotificationContent() {
         return `${year}/${month}/${day} ${hours}:${minutes}`;
     };
 
-    const currentDateTime = getCurrentDateTime();
-    const nitifications = [
-        {
-            id: 1,
-            nom: "Institut de Formation Technique",
-            titre: "Convocation aux examens",
-            motif: "Vous etes convoques d'assister aux examens ecrits qui se deroulera la semaine de ....",
-            date: "2024/20/11 10:45",
-            statut: "non lu"
-        },
-        {
-            id: 2,
-            nom: "Systeme",
-            titre: "Avertissement de retard de paiement de frais de formation et droit d'examen",
-            motif: "Lorem sdfjkfsdjfdnv,msdnkjnsdfmsfdmnsbndvkjsd  sjfbksdjbfjksndfnsdvkhjbsdkjfsdm,  sjfdjsdnf,msdn,jnsd jnsdjknfsd.nf.knsbklfhjsd ksdjhkfbsjdknfsmfns!",
-            date: currentDateTime,
-            statut: "non lu"
-        },
 
-    ];
+    const [notifications, setNotifications] = useState([]);
 
     const getColorForLetter = (letter) => {
         const firstLetter = letter.toUpperCase();
@@ -54,29 +38,76 @@ function NotificationContent() {
         }
     }
 
-    const [notifyData, setNotifyData] = useState(nitifications);
+    useEffect(() => {
+        chargerNotifications();
+    }, []);
 
+    const chargerNotifications = () => {
+        api.get('/notifications')
+            .then((rep) => {
+                // console.log(rep.data);
+                // console.log(rep.data.message);
+                setNotifications(rep.data);
+            })
+    }
 
     const showNotificationDetails = (notification) => {
-        swal({
-            title: notification.nom,
-            text: `${notification.titre}\n\n\n Objet\n
-            ${notification.motif}
-            \n\n${notification.date}`,
+        // swal({
+        //     title: `${nom}`,
+        //     text: `${notification.notificationOriginal.titre}\n\n\n Objet\n
+        //     ${notification.notificationOriginal.objet}
+        //     \n\n${notification.ma_notification.dateRecept}`,
 
-            buttons: {
-                confirm: {
-                    text: "Fermer",
-                    value: true,
-                    visible: true,
-                    className: "btn btn-primary",
-                    closeModal: true
-                }
+        //     buttons: {
+        //         confirm: {
+        //             text: "Fermer",
+        //             value: true,
+        //             visible: true,
+        //             className: "btn btn-primary",
+        //             closeModal: true
+        //         }
+        //     }
+        // });
+        localStorage.setItem('countNotify', '0');
+
+        Swal.fire({
+            title: `<h3><strong>${notification.notificationOriginal.titre}</strong></h3>`,
+            html: `
+                <div>
+                    <p><strong>Objet :</strong> ${notification.notificationOriginal.objet}</p>
+                    <p><strong>Date et Heure : </strong> ${formatDate(notification.ma_notification.dateRecept)}</p>
+                </div>
+            `,
+            confirmButtonColor: 'Fermer',
+            customClass: {
+                confirmButton: '',
+                popup: '',
+            },
+            buttonsStyling: true,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                updateNotificationStatut(notification.ma_notification.idNot);
+                chargerNotifications();
             }
-        });
+        })
     };
 
-    const deleteNotification = () => {
+
+    const updateNotificationStatut = async (idNot) => {
+        try {
+            const rep = await api.put(`/notificationEtu/${idNot}`)
+
+            if (rep.data.succes) {
+                console.log("Succes")
+            } else {
+                console.log(rep.data.message)
+            }
+        } catch (error) {
+            console.log("Erreur de requete", error)
+        }
+    }
+
+    const deleteNotification = (idNot) => {
         swal({
             title: "Etes-vous sur?",
             text: "Une fois supprime, vous ne pourrez plus recuperer ce fichier !",
@@ -95,19 +126,39 @@ function NotificationContent() {
             // dangerMode: true,
         }).then((willDelete) => {
             if (willDelete) {
-                swal("Poof! Votre donnee a ate supprime!", {
-                    icon: "success",
-                    buttons: {
-                        confirm: {
-                            className: "btn btn-success",
-                        },
-                    },
-                });
+                api.delete(`/notification/${idNot}`)
+                    .then((rep) => {
+                        if (rep.data.succes) {
+                            swal(`${rep.data.message}`, {
+                                icon: "success",
+                                buttons: {
+                                    confirm: {
+                                        className: "btn btn-success",
+                                    },
+                                },
+                            });
+                            chargerNotifications();
+                        }
+                        else {
+                            swal(`${rep.data.message}`, {
+                                icon: "error",
+                                buttons: {
+                                    confirm: {
+                                        className: "btn btn-success",
+                                    },
+                                },
+                            });
+                            chargerNotifications();
+                        }
+                    })
+
             } else {
                 swal.close();
             }
         });
     }
+
+    const nom = "INSITUT DE FORMATION TECHNIQUE";
 
 
 
@@ -128,34 +179,39 @@ function NotificationContent() {
                         <div className="card-body">
 
                             {
-                                notifyData.map((not, index) => (
+                                notifications.map((not, index) => (
 
-                                    <div key={index} data-key={not.id} className={not.statut === "non lu" ? "fw-bold" : ""}>
+                                    <div key={index} className={not.ma_notification.statutNot === "Non lu" ? "fw-bold" : ""}>
                                         <div className="d-flex">
-                                            <div className="avatar avatar-online">
+                                            <div className="avatar avatar">
                                                 <span
                                                     className="avatar-title rounded-circle border border-white"
-                                                    style={{ backgroundColor: getColorForLetter(not.nom.charAt(0)) }}
-                                                >{not.nom.charAt(0)}</span>
+                                                    style={{ backgroundColor: getColorForLetter(nom.charAt(0)) }}
+                                                >{nom.charAt(0)}</span>
                                             </div>
-                                            <div className="flex-1 ms-3 pt-1">
+                                            <div className="flex-1 ms-5 pt-1">
                                                 <h6 className="text-uppercase fw-bold mb-1">
-                                                    {not.nom}
-                                                    <span className={not.statut === "non lu" ? "text-warning ps-3" : "text-success ps-3"}>{not.statut}</span>
+                                                    {nom}
+                                                    <span className={not.ma_notification.statutNot === "Non lu" ? "text-warning ps-3" : "text-success ps-3"}>{not.ma_notification.statutNot}</span>
                                                 </h6>
                                                 <span className="text-muted ">
-                                                    {not.titre}
+                                                    {not.notificationOriginal.titre}
                                                 </span>
 
-                                                <div className='float-end pt-1'>
-                                                    <i className='fa fa-eye' onClick={() => showNotificationDetails(not)} style={{ cursor: 'pointer', fontSize: '20px' }}></i>&nbsp;&nbsp;
-                                                    <i className='fa fa-trash-alt text-danger' onClick={deleteNotification} style={{ cursor: 'pointer', fontSize: '20px' }}></i>
+
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+
+                                                <div className="float-end pt-1">
+                                                    <span className="text-muted">{formatDate(not.ma_notification.dateRecept)}</span>
+                                                </div>
+                                                <div className='float-end pt-3'>
+                                                    <i className='fa fa-eye' onClick={() => showNotificationDetails(not)} style={{ cursor: 'pointer', fontSize: '20px' }}></i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                                    <i className='fa fa-trash-alt text-danger' onClick={() => deleteNotification(not.ma_notification.idNot)} style={{ cursor: 'pointer', fontSize: '20px' }}></i>
                                                 </div>
                                             </div>
 
-                                            <div className="float-end pt-1">
-                                                <span className="text-muted">{not.date}</span>
-                                            </div>
+
                                         </div>
                                         <div className="separator-dashed"></div>
                                     </div>

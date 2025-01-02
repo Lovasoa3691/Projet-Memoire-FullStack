@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios';
 import swal from 'sweetalert';
+import api from '../API/api';
 
 function MyExamContent() {
 
@@ -8,27 +9,45 @@ function MyExamContent() {
 
     useEffect(() => {
         chargerExamens();
+
+        const interval = setInterval(() => {
+            verifieEtatExamen();
+        }, 60000);
+
+        return () => clearInterval(interval);
     }, []);
 
     const chargerExamens = () => {
 
-        const token = localStorage.getItem('token');
-        if (token) {
+        // const token = localStorage.getItem('token');
+        // if (token) {
 
-            axios.get('http://localhost:5000/api/inscriptions', {
-                headers: { Authorization: `Bearer ${token}` },
+        api.get('/inscriptions')
+            .then((rep) => {
+                // console.log(rep.data);
+                // setMatriculeEtu(rep.data.etu['matricule']);
+                setMesExamens(rep.data);
             })
-                .then((rep) => {
-                    // console.log(rep.data);
-                    // setMatriculeEtu(rep.data.etu['matricule']);
-                    setMesExamens(rep.data);
-                })
-                .catch((error) => {
-                    localStorage.removeItem('token');
-                    console.log("Erreur lors de la recuperation des donnees: ", error);
-                })
-        }
+            .catch((error) => {
+                // localStorage.removeItem('token');
+                console.log("Erreur lors de la recuperation des donnees: ", error);
+            })
+
+        // axios.get('http://localhost:5000/api/inscriptions', {
+        //     headers: { Authorization: `Bearer ${token}` },
+        // })
+
+        // }
     };
+
+    const verifieEtatExamen = async () => {
+        try {
+            await axios.get('/updateExamStatus');
+            chargerExamens();
+        } catch (error) {
+            console.error('Erreur lors de la mise à jour des statuts:', error);
+        }
+    }
 
 
     const formatDate = (dateExam) => {
