@@ -40,6 +40,11 @@ function NotificationContent() {
 
     useEffect(() => {
         chargerNotifications();
+        const interval = setInterval(() => {
+            chargerNotifications();
+        }, 5000);
+
+        return () => clearInterval(interval);
     }, []);
 
     const chargerNotifications = () => {

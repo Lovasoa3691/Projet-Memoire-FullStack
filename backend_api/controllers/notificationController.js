@@ -187,7 +187,9 @@ async function getNotificationRecent(req, res) {
 
         const matriculeEtu = etu.matricule;
 
-        const notificat = await notificationEtu.find({ etuMatricule: matriculeEtu });
+        const notificat = await notificationEtu.find({ etuMatricule: matriculeEtu, statutNot: 'Non lu' })
+            .sort({ dateRecept: -1 })
+            .limit(10);
 
         if (notificat.length === 0) {
             return res.json({
@@ -195,13 +197,36 @@ async function getNotificationRecent(req, res) {
             })
         }
 
-        const resultats = await notificationEtu
-            .find({ statutNot: 'Non lu' })
-            .sort({ dateRecept: -1 })
-            .limit(10);
+        const idNotification = notificat.map(notify => notify.idNot);
+
+        const notifications = await notification.find({ idNot: { $in: idNotification } });
+        // .sort({ dateEnvoi: -1 });
+
+        const resultats = notifications.map(not => {
+            const notificationAssocie = notificat.find(notif => notif.idNot === not.idNot);
+            return {
+                ma_notification: notificationAssocie,
+                notificationOriginal: not,
+            };
+        });
+
+        return res.json(resultats);
+
+        // const resultats = await notificationEtu
+        //     .find({ statutNot: 'Non lu' })
+        //     .sort({ dateRecept: -1 })
+        //     .limit(10);
 
 
-        return res.json({ resultats });
+        // const resultats = notifications.map(not => {
+        //     const notificationAssocie = notificat.find(notif => notif.idNot === not.idNot);
+        //     return {
+        //         ma_notification: notificationAssocie,
+        //         notificationOriginal: not,
+        //     };
+        // });
+
+        // return res.json(resultats);
 
     } catch (error) {
         console.log(error);

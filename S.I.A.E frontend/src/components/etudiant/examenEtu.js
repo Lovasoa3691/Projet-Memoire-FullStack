@@ -23,9 +23,9 @@ function ExamenContent() {
         // })
         api.get('/examens')
             .then((rep) => {
-                // console.log(rep.data.etu);
+                // console.log(rep.data.examenTries);
                 setMatriculeEtu(rep.data.etu['matricule']);
-                setExamensDispo(rep.data.examens);
+                setExamensDispo(rep.data.examenTries);
             })
             .catch((error) => {
                 localStorage.removeItem('token');
@@ -84,7 +84,7 @@ function ExamenContent() {
 
             <div className="page-inner">
                 <div className="page-header">
-                    <h3 className="fw-bold mb-3">Liste des examens disponibles {matriculeEtu}</h3>
+                    <h3 className="fw-bold mb-3">Liste des examens disponibles</h3>
                 </div>
 
                 <div className="row justify-content-center align-item-center">

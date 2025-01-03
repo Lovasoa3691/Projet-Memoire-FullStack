@@ -155,6 +155,81 @@ async function getInscriptionParEtudiant(req, res) {
     }
 }
 
+async function getInscriptionEnCoursParEtudiant(req, res) {
+    try {
+        const { email } = req.user;
+
+        const utilisateur = await Utilisateurs.findOne({ email: email });
+
+        if (!utilisateur) {
+            return res.json({
+                erreur: "Utilisateur non trouve"
+            });
+        }
+
+        const etu = await etudiant.findOne({ utilisateur: utilisateur._id });
+
+        if (!etu) {
+            return res.json({
+                erreur: "Etudiant non trouve"
+            });
+        }
+
+        const matriculeEtu = etu.matricule;
+
+        const inscriptions = await inscription.find({ etudiantMatricule: matriculeEtu });
+
+        if (inscriptions.length === 0) {
+            return res.json({
+                message: "Aucun inscription trouve"
+            })
+        }
+
+        const idExamens = inscriptions.map(inscription => inscription.idExam);
+
+        const examens = await examen.find({ idExam: { $in: idExamens }, statut: 'En cours' });
+
+        const examensAvecDates = examens.map(exam => {
+            const examStart = new Date(exam.dateExam);
+            const [heureDebutHeure, heureDebutMinute] = exam.heureDebut.split(':');
+            const [heureFinHeure, heureFinMinute] = exam.heureFin.split(':');
+
+
+            examStart.setHours(heureDebutHeure, heureDebutMinute);
+
+
+            const examEnd = new Date(examStart);
+            examEnd.setHours(heureFinHeure, heureFinMinute);
+
+
+            exam.examStart = examStart;
+            exam.examEnd = examEnd;
+
+            return exam;
+        });
+
+        const examenTries = examensAvecDates.sort((a, b) => a.examStart - b.examStart).limit(5);
+
+        return res.json({ examenTries });
+
+        // const resultats = examens.map(exam => {
+        //     const inscriptionAssocie = inscriptions.find(ins => ins.idExam === exam.idExam);
+        //     return {
+        //         mon_examen: exam,
+        //         mon_inscription: inscriptionAssocie
+        //     };
+        // });
+
+        // return res.json(resultats);
+
+    } catch (error) {
+        console.log(error);
+        return res.json({
+            message: "Erreur lors de la recuperation de l'inscription"
+        });
+    }
+}
+
 async function supprimerInscription(req, res) {
     try {
         const { idInsc } = req.params;
@@ -183,4 +258,9 @@ async function supprimerInscription(req, res) {
     }
 }
 
-module.exports = { CreerInscription, getInscriptionParEtudiant, supprimerInscription };
+module.exports = {
+    CreerInscription,
+    getInscriptionEnCoursParEtudiant,
+    getInscriptionParEtudiant,
+    supprimerInscription
+};

@@ -8,12 +8,21 @@ import swal from "sweetalert";
 import { Sparklines, SparklinesLine, SparklinesBars, SparklinesSpots } from "react-sparklines";
 import axios from "axios";
 import api from "../API/api";
+import Swal from "sweetalert2";
 
 
 const Dashboard = () => {
 
-    const getCurrentDateTime = () => {
-        const current = new Date();
+    const [notificationRecent, setNotificationRecent] = useState([]);
+    const nom = "INSTITUT DE FORMATION TECHNIQUIE"
+    const [timeLeft, setTimeLeft] = useState({
+        j: 0, h: 0, min: 0, sec: 0
+    });
+    const [minDate, setMinDate] = useState('');
+
+
+    const formatDate = (date) => {
+        const current = new Date(date);
         const year = current.getFullYear();
         const month = String(current.getMonth() + 1).padStart(2, '0'); // Ajout de 1 car les mois commencent à 0
         const day = String(current.getDate()).padStart(2, '0');
@@ -23,70 +32,16 @@ const Dashboard = () => {
         return `${year}/${month}/${day} ${hours}:${minutes}`;
     };
 
-    const currentDateTime = getCurrentDateTime();
-    const nitifications = [
-        {
-            id: 1,
-            nom: "Institut de Formation Technique",
-            titre: "Convocation aux examens",
-            motif: "Vous etes convoques d'assister aux examens ecrits qui se deroulera la semaine de ....",
-            date: "2024/20/11 10:45",
-            statut: "non lu"
-        },
-        {
-            id: 2,
-            nom: "Systeme",
-            titre: "Avertissement de retard de paiement de frais de formation et droit d'examen",
-            motif: "Lorem sdfjkfsdjfdnv,msdnkjnsdfmsfdmnsbndvkjsd  sjfbksdjbfjksndfnsdvkhjbsdkjfsdm,  sjfdjsdnf,msdn,jnsd jnsdjknfsd.nf.knsbklfhjsd ksdjhkfbsjdknfsmfns!",
-            date: currentDateTime,
-            statut: "lu"
-        },
-        {
-            id: 3,
-            nom: "Systeme",
-            titre: "Avertissement de retard de paiement de frais de formation et droit d'examen",
-            motif: "Lorem sdfjkfsdjfdnv,msdnkjnsdfmsfdmnsbndvkjsd  sjfbksdjbfjksndfnsdvkhjbsdkjfsdm,  sjfdjsdnf,msdn,jnsd jnsdjknfsd.nf.knsbklfhjsd ksdjhkfbsjdknfsmfns!",
-            date: currentDateTime,
-            statut: "non lu"
-        },
-        // {
-        //     id: 4,
-        //     nom: "Systeme",
-        //     titre: "Avertissement de retard de paiement de frais de formation et droit d'examen",
-        //     motif: "Lorem sdfjkfsdjfdnv,msdnkjnsdfmsfdmnsbndvkjsd  sjfbksdjbfjksndfnsdvkhjbsdkjfsdm,  sjfdjsdnf,msdn,jnsd jnsdjknfsd.nf.knsbklfhjsd ksdjhkfbsjdknfsmfns!",
-        //     date: currentDateTime,
-        //     statut: "lu"
-        // },
-        // {
-        //     id: 5,
-        //     nom: "Systeme",
-        //     titre: "Avertissement de retard de paiement de frais de formation et droit d'examen",
-        //     motif: "Lorem sdfjkfsdjfdnv,msdnkjnsdfmsfdmnsbndvkjsd  sjfbksdjbfjksndfnsdvkhjbsdkjfsdm,  sjfdjsdnf,msdn,jnsd jnsdjknfsd.nf.knsbklfhjsd ksdjhkfbsjdknfsmfns!",
-        //     date: currentDateTime,
-        //     statut: "lu"
-        // },
+    const formatDate2 = (date) => {
+        const current = new Date(date);
+        const year = current.getFullYear();
+        const month = String(current.getMonth() + 1).padStart(2, '0');
+        const day = String(current.getDate()).padStart(2, '0');
 
-    ];
+        return `${year}/${month}/${day}`;
+    };
 
-    const mesExam = [
-        {
-            id: 1, session: "EXAM.S5", matiere: "JAVA", dateExam: currentDateTime, debut: "08:30", fin: "12:00", statut: "En cours", duree: "3H 30"
-        },
-        {
-            id: 2, session: "EXAM.S5", matiere: "C++", dateExam: currentDateTime, debut: "07:30", fin: "9:30", statut: "En cours", duree: "3H"
-        },
-        {
-            id: 3, session: "EXAM.S5", matiere: "Python", dateExam: currentDateTime, debut: "08:30", fin: "12:00", statut: "En cours", duree: "3H"
-        },
-        {
-            id: 4, session: "EXAM.S5", matiere: "MCP", dateExam: currentDateTime, debut: "08:30", fin: "12:00", statut: "En cours", duree: "3H"
-        },
-        {
-            id: 5, session: "EXAM.S5", matiere: "RO", dateExam: currentDateTime, debut: "08:30", fin: "12:00", statut: "En cours", duree: "3H"
-        },
-    ];
-
-    const [exam, setExam] = useState(mesExam);
+    const [prochaineExam, setProchaineExam] = useState([]);
 
     const getColorForLetter = (letter) => {
         const firstLetter = letter.toUpperCase();
@@ -102,49 +57,81 @@ const Dashboard = () => {
         }
     }
 
-    const [notifyData, setNotifyData] = useState(nitifications);
-
 
     const showNotificationDetails = (notification) => {
-        swal({
-            title: notification.nom,
-            text: `${notification.titre}\n\n\n Objet\n
-            ${notification.motif}
-            \n\n${notification.date}`,
 
-            buttons: {
-                confirm: {
-                    text: "Fermer",
-                    value: true,
-                    visible: true,
-                    className: "btn btn-primary",
-                    closeModal: true
-                }
+        localStorage.setItem('countNotify', '0');
+
+        Swal.fire({
+            title: `<h3><strong>${notification.notificationOriginal.titre}</strong></h3>`,
+            html: `
+                <div>
+                    <p><strong>Objet :</strong> ${notification.notificationOriginal.objet}</p>
+                    <p><strong>Date et Heure : </strong> ${formatDate(notification.ma_notification.dateRecept)}</p>
+                </div>
+            `,
+            confirmButtonColor: 'Fermer',
+            customClass: {
+                confirmButton: '',
+                popup: '',
+            },
+            buttonsStyling: true,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                updateNotificationStatut(notification.ma_notification.idNot);
+                getNotificationRecents();
             }
-        });
+        })
     };
 
-    useEffect(() => {
-        // getCountStudent();
-        const interval = setInterval(() => {
-            getNotificationRecents();
-        }, 10000);
+    const updateNotificationStatut = async (idNot) => {
+        try {
+            const rep = await api.put(`/notificationEtu/${idNot}`)
 
-        return () => clearInterval(interval);
-    }, []);
+            if (rep.data.succes) {
+                console.log("Succes")
+            } else {
+                console.log(rep.data.message)
+            }
+        } catch (error) {
+            console.log("Erreur de requete", error)
+        }
+    }
 
-    const data = [5, 10, 5, 20, 8, 15, 12, 18, 25];
-    const [EtuData, setEtuData] = useState("");
-    const [notificationRecent, setNotificationRecent] = useState([]);
-
-    const getCountStudent = () => {
-        axios.get('http://localhost:5000/api/etudiants/count')
+    const getProchaineExam = () => {
+        api.get('/prochaineExam')
             .then((rep) => {
-                setEtuData(rep.data);
+                console.log(rep.data.examenTries);
+                setProchaineExam(rep.data.examenTries);
             })
-            .catch((rep) => {
-                console.log(rep.message);
-            })
+    }
+
+    const getIntervaleTemps = () => {
+        if (prochaineExam.length > 0 && prochaineExam[0].dateExam) {
+            const now = new Date();
+            const examDate = new Date(prochaineExam[0].dateExam);
+            const diff = examDate.getTime() - now.getTime();
+            // console.log(diff);
+
+            if (diff > 0) {
+                return {
+                    j: Math.floor(diff / (1000 * 60 * 60 * 24)),
+                    h: Math.floor((diff / (1000 * 60 * 60)) % 24),
+                    min: Math.floor((diff / (1000 * 60)) % 60),
+                    sec: Math.floor((diff / 1000) % 60),
+                };
+            } else {
+                return {
+                    j: 0, h: 0, min: 0, sec: 0
+                };
+            }
+        } else {
+            console.error("Date de l'examen non definie");
+            return {
+                j: 0, h: 0, min: 0, sec: 0
+            };
+        }
+
     }
 
     const getNotificationRecents = () => {
@@ -152,6 +139,52 @@ const Dashboard = () => {
             .then((rep) => {
                 // console.log(rep.data)
                 setNotificationRecent(rep.data);
+            })
+    }
+
+    useEffect(() => {
+        getNotificationRecents();
+        getProchaineExam();
+        // setdateExamen(prochaineExam[0].dateExam);
+        const interval = setInterval(() => {
+            getNotificationRecents();
+            getProchaineExam();
+        }, 10000);
+
+        return () => clearInterval(interval);
+    }, []);
+
+
+    useEffect(() => {
+        if (prochaineExam.length > 0) {
+            const timer = setInterval(() => {
+                setTimeLeft(getIntervaleTemps());
+            }, 1000);
+
+            return () => clearInterval(timer);
+        }
+
+    }, [prochaineExam]);
+
+    useEffect(() => {
+        api.get('/inscriptions')
+            .then((rep) => {
+                console.log(rep.data);
+                // setMinDate(rep.data[0].mon_examen.dateExam);
+            })
+            .catch((error) => {
+                console.log("Erreur lors de la recuperation des donnees: ", error);
+            })
+    }, [])
+
+
+    const getCountStudent = () => {
+        axios.get('http://localhost:5000/api/etudiants/count')
+            .then((rep) => {
+                // setEtuData(rep.data);
+            })
+            .catch((rep) => {
+                console.log(rep.message);
             })
     }
 
@@ -181,7 +214,7 @@ const Dashboard = () => {
                                     <div className="col-8 pe-0">
                                         <h3 className="fw-bold mb-1">Semaine du</h3>
                                         <div className="text-md text-uppercase fw-bold op-8">
-                                            28/12/2024
+                                            {formatDate2(minDate)}
                                         </div>
                                     </div>
                                     <div className="col-4 ps-0 text-end">
@@ -231,9 +264,9 @@ const Dashboard = () => {
                                 <h2 className="py-4 mb-0">Sceance Suivante</h2>
                                 <div className="row">
                                     <div className="col-8 pe-0">
-                                        <h3 className="fw-bold mb-1">Dans</h3>
+                                        <h3 className="fw-bold mb-1">dans</h3>
                                         <div className="text-md text-uppercase fw-bold op-8">
-                                            5 Jours
+                                            {timeLeft.j} J,  {timeLeft.h} H {timeLeft.min} min {timeLeft.sec} sec
                                         </div>
                                     </div>
                                     {/* <div className="col-4 ps-0 text-end">
@@ -257,42 +290,52 @@ const Dashboard = () => {
                             </div>
 
 
-                            <div className="card-body" style={{ height: '450px' }}>
+                            <div className="card-body" style={{ height: 'auto', minHeight: '500px' }}>
 
                                 {
-                                    notifyData.map((not, index) => (
+                                    notificationRecent.length > 0 ? (
+                                        notificationRecent.map((not, index) => (
 
-                                        <div key={index} data-key={not.id} className={not.statut === "non lu" ? "fw-bold" : ""}>
-                                            <div className="d-flex">
-                                                <div className="avatar ">
-                                                    <span
-                                                        className="avatar-title rounded-circle border border-white"
-                                                        style={{ backgroundColor: getColorForLetter(not.nom.charAt(0)) }}
-                                                    >{not.nom.charAt(0)}</span>
-                                                </div>
-                                                <div className="flex-1 ms-3 pt-1">
-                                                    <h6 className="text-uppercase fw-bold mb-1">
-                                                        {not.nom}
-                                                        <span className={not.statut === "non lu" ? "text-warning ps-3" : "text-success ps-3"}>{not.statut}</span>
-                                                    </h6>
-                                                    <span className="text-muted ">
-                                                        {not.titre}
-                                                    </span>
+                                            <div key={index} className={not.ma_notification.statutNot === "Non lu" ? "fw-bold" : ""}>
+                                                <div className="d-flex">
+                                                    <div className="avatar avatar">
+                                                        <span
+                                                            className="avatar-title rounded-circle border border-white"
+                                                            style={{ backgroundColor: getColorForLetter(nom.charAt(0)) }}
+                                                        >{nom.charAt(0)}</span>
+                                                    </div>
+                                                    <div className="flex-1 ms-5 pt-1">
+                                                        <h6 className="text-uppercase fw-bold mb-1">
+                                                            {nom}
+                                                            <span className={not.ma_notification.statutNot === "Non lu" ? "text-warning ps-3" : "text-success ps-3"}>{not.ma_notification.statutNot}</span>
+                                                        </h6>
+                                                        <span className="text-muted ">
+                                                            {not.notificationOriginal.titre}
+                                                        </span>
 
-                                                    <div className='float-end pt-1'>
-                                                        <i className='fa fa-eye' onClick={() => showNotificationDetails(not)} style={{ cursor: 'pointer', fontSize: '20px' }}></i>
+
+                                                    </div>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+
+                                                        <div className="float-end pt-1">
+                                                            <span className="text-muted">{formatDate(not.ma_notification.dateRecept)}</span>
+                                                        </div>
+                                                        <div className='float-end pt-3'>
+                                                            <i className='fa fa-eye' onClick={() => showNotificationDetails(not)} style={{ cursor: 'pointer', fontSize: '20px' }}></i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                                            {/* <i className='fa fa-trash-alt text-danger' style={{ cursor: 'pointer', fontSize: '20px' }}></i> */}
+                                                        </div>
                                                     </div>
 
-                                                </div>
 
-                                                <div className="float-end pt-1">
-                                                    <span className="text-muted">{not.date}</span>
                                                 </div>
+                                                <div className="separator-dashed"></div>
                                             </div>
-                                            <div className="separator-dashed"></div>
-                                        </div>
+                                        )
+                                        )
+                                    ) : (
+                                        <div className="text-center muted">Aucun nouveaux notifications trouves</div>
                                     )
-                                    )
+
                                 }
 
                             </div>
@@ -311,7 +354,7 @@ const Dashboard = () => {
                             </div>
 
 
-                            <div className="card-body" style={{ height: '450px' }}>
+                            <div className="card-body" style={{ height: '500px', minHeight: '500px' }}>
                                 <div className="table-responsive">
 
                                     <table className="table table-bordered table-head-bg-success  mt-0">
@@ -325,12 +368,12 @@ const Dashboard = () => {
                                         </thead>
                                         <tbody>
                                             {
-                                                exam.map((ex, index) => (
-                                                    <tr key={index} data-key={ex.id} className="text-center">
-                                                        <td>{ex.session}</td>
-                                                        <td>{ex.dateExam}</td>
+                                                prochaineExam.map((ex, index) => (
+                                                    <tr key={index} data-key={ex.idExam} className="text-center">
+                                                        <td>{ex.codeExam}</td>
+                                                        <td>{formatDate2(ex.dateExam)}</td>
                                                         <td>{ex.matiere}</td>
-                                                        <td>{ex.debut} - {ex.fin}</td>
+                                                        <td>{ex.heureDebut} - {ex.heureFin}</td>
                                                     </tr>
                                                 ))
                                             }

@@ -32,12 +32,34 @@ async function getExamen(req, res) {
             });
         }
 
-        return res.json({ etu, examens });
+        const examensAvecDates = examens.map(exam => {
+            const examStart = new Date(exam.dateExam);
+            const [heureDebutHeure, heureDebutMinute] = exam.heureDebut.split(':');
+            const [heureFinHeure, heureFinMinute] = exam.heureFin.split(':');
+
+
+            examStart.setHours(heureDebutHeure, heureDebutMinute);
+
+
+            const examEnd = new Date(examStart);
+            examEnd.setHours(heureFinHeure, heureFinMinute);
+
+
+            exam.examStart = examStart;
+            exam.examEnd = examEnd;
+
+            return exam;
+        });
+
+        const examenTries = examensAvecDates.sort((a, b) => a.examStart - b.examStart);
+
+        return res.json({ etu, examens, examenTries });
     } catch (error) {
         return res.json({ erreur: "Erreur lors de la recuperation." });
     }
 
 }
+
 
 async function mettreAjourStatutExam(req, res) {
     try {

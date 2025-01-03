@@ -41,12 +41,20 @@ function MyExamContent() {
     };
 
     const verifieEtatExamen = async () => {
-        try {
-            await axios.get('/updateExamStatus');
-            chargerExamens();
-        } catch (error) {
-            console.error('Erreur lors de la mise à jour des statuts:', error);
-        }
+        await axios.get('http://localhost:5000/api/updateExamStatus')
+            .then((rep) => {
+                if (rep.data.succes) {
+                    const resultat = rep.data.examMiseAJour;
+                    if (resultat.length > 0) {
+                        chargerExamens();
+                    } else {
+                        console.log("Aucun examen a mettre a jour")
+                    }
+                }
+            })
+            .catch((error) => {
+                console.error('Erreur:', error);
+            })
     }
 
 

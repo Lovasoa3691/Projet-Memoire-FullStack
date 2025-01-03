@@ -4,6 +4,7 @@ const Utilisateurs = require('../models/utilisateurs');
 const etudiant = require('../models/etudiant');
 
 const secretKey = process.env.SECRET_KEY || "mySecretKey3691";
+const refreshKey = process.env.REFRESH_SECRET_KEY || "mySecretKey3691_refresh";
 
 async function login(req, res) {
     const { email, mdp } = req.body;
@@ -33,11 +34,29 @@ async function login(req, res) {
             { expiresIn: '1h' }
         );
 
+        const refreshtoken = jwt.sign(
+            {
+                id: utilisateur._id,
+                nomUt: utilisateur.nom_ut,
+                email: utilisateur.email,
+                role: utilisateur.role,
+            },
+            refreshKey,
+            { expiresIn: '7d' }
+        );
+
         res.cookie('token', token, {
             httpOnly: true,
-            secure: true,
+            secure: process.env.NODE_ENV === 'production',
             sameSite: 'Strict',
             maxAge: 60 * 60 * 1000,
+        });
+
+        res.cookie('refreshtoken', refreshtoken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
         return res.json({
@@ -136,6 +155,38 @@ async function verifieToken(req, res, next) {
     }
 }
 
+
+async function verifieRefreshToken(req, res) {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+        return res.status(401).json({ message: 'Non autorisé' });
+    }
+
+    jwt.verify(refreshToken, refreshKey, (err, utilisateur) => {
+        if (err) return res.status(403).json({ message: 'Token invalide' });
+
+        const newAccessToken = jwt.sign(
+            {
+                id: utilisateur._id,
+                nomUt: utilisateur.nom_ut,
+                email: utilisateur.email,
+                role: utilisateur.role,
+            },
+            secretKey,
+            { expiresIn: '1h' }
+        );
+
+        res.cookie('token', newAccessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict',
+            maxAge: 60 * 60 * 1000,
+        });
+
+        res.json({ message: 'Token rafraîchi avec succès' });
+    });
+}
+
 async function getUtilisateur(req, res) {
     // const authHeader = req.headers.authorization;
 
@@ -196,4 +247,12 @@ async function authentificate(req, res, next) {
     }
 }
 
-module.exports = { login, logout, inscription, getUtilisateur, authentificate, verifieToken };
+module.exports = {
+    login,
+    logout,
+    inscription,
+    getUtilisateur,
+    authentificate,
+    verifieToken,
+    verifieRefreshToken
+};
