@@ -61,6 +61,44 @@ async function getExamen(req, res) {
 }
 
 
+async function getExamEnCoursCount(req, res) {
+
+    const { email } = req.user;
+
+    try {
+
+        const utilisateur = await Utilisateurs.findOne({ email: email });
+
+        if (!utilisateur) {
+            return res.json({
+                erreur: "Utilisateur non trouve"
+            });
+        }
+
+        const etu = await etudiant.findOne({ utilisateur: utilisateur._id });
+        if (!etu) {
+            return res.json({
+                erreur: "Etudiant non trouve"
+            });
+        }
+
+
+        const examens = await examen.find({ statut: 'En cours' });
+        if (!examens) {
+            return res.json({
+                error: "Aucun information trouve"
+            });
+        }
+
+
+        return res.json({ examCount: examens.length });
+    } catch (error) {
+        return res.json({ erreur: "Erreur lors de la recuperation." });
+    }
+
+}
+
+
 async function mettreAjourStatutExam(req, res) {
     try {
         const now = new Date();
@@ -98,5 +136,5 @@ async function mettreAjourStatutExam(req, res) {
     }
 }
 
-module.exports = { getExamen, mettreAjourStatutExam };
+module.exports = { getExamen, mettreAjourStatutExam, getExamEnCoursCount };
 

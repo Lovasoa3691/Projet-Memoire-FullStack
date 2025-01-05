@@ -189,7 +189,7 @@ async function getNotificationRecent(req, res) {
 
         const notificat = await notificationEtu.find({ etuMatricule: matriculeEtu, statutNot: 'Non lu' })
             .sort({ dateRecept: -1 })
-            .limit(10);
+            .limit(5);
 
         if (notificat.length === 0) {
             return res.json({

@@ -102,6 +102,59 @@ async function getNextSequenceValue(seq) {
     return counter.sequence_value
 }
 
+async function getInscriptionValideCount(req, res) {
+    try {
+        const { email } = req.user;
+
+        const utilisateur = await Utilisateurs.findOne({ email: email });
+        if (!utilisateur) {
+            return res.json({ erreur: "Utilisateur non trouvé" });
+        }
+
+        const etu = await etudiant.findOne({ utilisateur: utilisateur._id });
+        if (!etu) {
+            return res.json({ erreur: "Étudiant non trouvé" });
+        }
+
+        const matriculeEtu = etu.matricule;
+
+        const inscriptionsValide = await inscription.find({
+            etudiantMatricule: matriculeEtu,
+            statutInsc: "Valide"
+        });
+
+        if (inscriptionsValide.length === 0) {
+            return res.json({
+                message: "Aucune inscription valide trouvée"
+            });
+        }
+
+        const examIds = inscriptionsValide.map(insc => insc.idExam);
+
+        const InscriptionValide = await examen.find({
+            idExam: { $in: examIds },
+            statut: "En cours"
+        });
+
+        const examEnCoursCount = await examen.find({
+            statut: "En cours"
+        });
+
+        return res.json({
+            succes: true,
+            examEnCoursCount: examEnCoursCount.length,
+            nbInscriptionValide: InscriptionValide.length,
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message: "Erreur lors de la récupération des données",
+            error: error.message
+        });
+    }
+}
+
 
 async function getInscriptionParEtudiant(req, res) {
     try {
@@ -187,7 +240,7 @@ async function getInscriptionEnCoursParEtudiant(req, res) {
 
         const idExamens = inscriptions.map(inscription => inscription.idExam);
 
-        const examens = await examen.find({ idExam: { $in: idExamens }, statut: 'En cours' });
+        const examens = await examen.find({ idExam: { $in: idExamens }, statut: 'En cours' }).limit(5);
 
         const examensAvecDates = examens.map(exam => {
             const examStart = new Date(exam.dateExam);
@@ -208,7 +261,7 @@ async function getInscriptionEnCoursParEtudiant(req, res) {
             return exam;
         });
 
-        const examenTries = examensAvecDates.sort((a, b) => a.examStart - b.examStart).limit(5);
+        const examenTries = examensAvecDates.sort((a, b) => a.examStart - b.examStart);
 
         return res.json({ examenTries });
 
@@ -262,5 +315,6 @@ module.exports = {
     CreerInscription,
     getInscriptionEnCoursParEtudiant,
     getInscriptionParEtudiant,
-    supprimerInscription
+    supprimerInscription,
+    getInscriptionValideCount
 };
