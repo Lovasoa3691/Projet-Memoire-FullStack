@@ -41,7 +41,7 @@ function MyExamContent() {
     };
 
     const verifieEtatExamen = async () => {
-        await axios.get('http://localhost:5000/api/updateExamStatus')
+        await axios.get('/updateExamStatus')
             .then((rep) => {
                 if (rep.data.succes) {
                     const resultat = rep.data.examMiseAJour;
@@ -109,7 +109,7 @@ function MyExamContent() {
                 // dangerMode: true,
             }).then((willDelete) => {
                 if (willDelete) {
-                    axios.delete(`htpp://localhost:5000/api/inscription/${idInscription}`)
+                    api.delete(`inscription/${idInscription}`)
                         .then((rep) => {
                             if (rep.data.succes) {
                                 swal(`Poof! ${rep.data.succes}`, {
@@ -120,6 +120,7 @@ function MyExamContent() {
                                         },
                                     },
                                 });
+                                chargerExamens();
                             } else {
                                 swal(`${rep.data.message}`, {
                                     icon: "error",
@@ -129,6 +130,7 @@ function MyExamContent() {
                                         },
                                     },
                                 });
+                                chargerExamens();
                             }
                         })
 
@@ -163,42 +165,51 @@ function MyExamContent() {
                                         </div>
                                         <div className="card-body">
 
-                                            <table className="table table-bordered table-head-bg-info table-bordered-bd-info mt-4">
-                                                <thead>
-                                                    <tr className='text-center'>
-                                                        <th scope='col'>SESSION</th>
-                                                        <th scope="col">DATE</th>
-                                                        <th scope="col">MATIERE</th>
-                                                        <th scope="col">HORAIRE</th>
-                                                        <th scope="col">DUREE</th>
-                                                        <th scope="col">STATUT</th>
-                                                        <th scope='col'>ACTIONS</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {
-                                                        mesExamens.map((ex) => (
-                                                            <tr key={ex.mon_inscription._id} data-key={ex.mon_inscription._id} className='text-center fw-bold'>
-                                                                <td>{ex.mon_examen.codeExam}</td>
-                                                                <td>{formatDate(ex.mon_examen.dateExam)}</td>
-                                                                <td>{ex.mon_examen.matiere}</td>
-                                                                <td>{ex.mon_examen.heureDebut} - {ex.mon_examen.heureFin}</td>
-                                                                <td>{ex.mon_examen.duree}</td>
-                                                                <td>
-                                                                    <span className={ex.mon_examen.statut === "Termine" ? "badge badge-primary fw-bold" : "badge badge-warning fw-bold"}>{ex.mon_examen.statut}</span>
-                                                                </td>
-                                                                <td>
-                                                                    <i className='fa fa-times text-danger'
-                                                                        onClick={(e) => handleDeleteExam(ex.mon_inscription._id, e)}
-                                                                        style={{ fontSize: '20px', cursor: 'pointer' }}></i>
-                                                                </td>
+                                            {
+                                                mesExamens.length > 0 ? (
+                                                    <table className="table table-bordered table-head-bg-info table-bordered-bd-info mt-4">
+                                                        <thead>
+                                                            <tr className='text-center'>
+                                                                <th scope='col'>SESSION</th>
+                                                                <th scope="col">DATE</th>
+                                                                <th scope="col">MATIERE</th>
+                                                                <th scope="col">HORAIRE</th>
+                                                                <th scope="col">DUREE</th>
+                                                                <th scope="col">STATUT</th>
+                                                                <th scope='col'>ACTIONS</th>
                                                             </tr>
-                                                        ))
-                                                    }
+                                                        </thead>
+                                                        <tbody>
+                                                            {
+
+                                                                mesExamens.map((ex) => (
+                                                                    <tr key={ex.mon_inscription._id} data-key={ex.mon_inscription._id} className='text-center fw-bold'>
+                                                                        <td>{ex.mon_examen.codeExam}</td>
+                                                                        <td>{formatDate(ex.mon_examen.dateExam)}</td>
+                                                                        <td>{ex.mon_examen.matiere}</td>
+                                                                        <td>{ex.mon_examen.heureDebut} - {ex.mon_examen.heureFin}</td>
+                                                                        <td>{ex.mon_examen.duree}</td>
+                                                                        <td>
+                                                                            <span className={ex.mon_examen.statut === "Termine" ? "badge badge-primary fw-bold" : "badge badge-warning fw-bold"}>{ex.mon_examen.statut}</span>
+                                                                        </td>
+                                                                        <td>
+                                                                            <i className='fa fa-times text-danger'
+                                                                                onClick={(e) => handleDeleteExam(ex.mon_inscription._id, e)}
+                                                                                style={{ fontSize: '20px', cursor: 'pointer' }}></i>
+                                                                        </td>
+                                                                    </tr>
+                                                                ))
+                                                            }
 
 
-                                                </tbody>
-                                            </table>
+                                                        </tbody>
+                                                    </table>
+                                                ) : (
+                                                    <div className="text-center">Vous n'avez pas encore des nouvelles sessions d'examens a suivre</div>
+                                                )
+                                            }
+
+
                                         </div>
                                         {/* </div> */}
 

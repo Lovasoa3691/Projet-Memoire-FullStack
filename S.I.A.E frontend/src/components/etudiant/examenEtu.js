@@ -14,24 +14,36 @@ function ExamenContent() {
     //     // console.log(JSON.stringify(EtuData))
     // }, []);
 
-    useEffect(() => {
-        // const token = localStorage.getItem('token');
-        // if (token) {
 
-        // axios.get('http://localhost:5000/api/examens', {
-        //     headers: { Authorization: `Bearer ${token}` },
-        // })
+
+    const chargerExamenDispo = () => {
         api.get('/examens')
             .then((rep) => {
-                // console.log(rep.data.examenTries);
+                // console.log(rep.data);
                 setMatriculeEtu(rep.data.etu['matricule']);
-                setExamensDispo(rep.data.examenTries);
+                // setExamensDispo(rep.data);
+                const { examenTries, inscriptionAssocie } = rep.data;
+
+                const fusionData = examenTries.map(exam => {
+                    const inscription = inscriptionAssocie.find(ins => ins.idExam === exam.idExam);
+                    return {
+                        ...exam,
+                        statutIns: inscription ? inscription.statutIns : null
+                    };
+                })
+
+                setExamensDispo(fusionData);
+
+                // console.log(fusionData);
             })
             .catch((error) => {
                 localStorage.removeItem('token');
                 console.log("Erreur lors de la recuperation des donnees: ", error);
             })
-        // }
+    }
+
+    useEffect(() => {
+        chargerExamenDispo();
     }, []);
 
     const handleInscription = async (etudiantId, idExamen, dateExam) => {
@@ -62,6 +74,8 @@ function ExamenContent() {
                 } else {
                     swal("Erreur fatale!", rep.data.message, "error");
                 }
+
+                chargerExamenDispo();
 
             }, 2000);
         } catch (error) {
@@ -94,13 +108,13 @@ function ExamenContent() {
 
                             {
                                 examensDispo.map((item) => (
-                                    <div className="col-md-4 ps-md-0 pe-md-4" key={item.idExam}>
+                                    <div className="col-md-3 ps-md-0 pe-md-4" key={item.idExam}>
                                         <div className="card card-pricing card-pricing-focus">
                                             <div className="card-header">
                                                 <h4 className="card-title">{item.codeExam}</h4>
                                                 <div className="card-price">
                                                     <span className="text fw-bold text-secondary">{item.matiere}</span>
-                                                    {/* <span className="text">JAVA IHM</span> */}
+
                                                 </div>
                                             </div>
                                             <div className="card-body">
@@ -121,23 +135,25 @@ function ExamenContent() {
                                                         <span className="name-specification">Duree</span>
                                                         <span className="status-specification">{item.duree}</span>
                                                     </li>
-                                                    {/* <li>
-                                                <span className="name-specification">Live Support</span>
-                                                <span className="status-specification">Yes</span>
-                                            </li> */}
+
                                                 </ul>
                                             </div>
                                             <div className="card-footer">
-                                                <button onClick={() => handleInscription(matriculeEtu, item.idExam, item.dateExam)} className="btn btn-primary w-100">
-                                                    <b>Inscrire</b>
-                                                </button>
+                                                {item.statutIns === "Valide" ? (
+                                                    <div className="text-success"><i className="fas fa-2x fa-check-circle"></i> <b></b></div>
+                                                ) : item.statutIns === "En attente" ? (
+                                                    <div className="text-warning"><i className="fas fa-2x fa-hourglass-half"></i> <b></b></div>
+                                                ) : (
+                                                    <button onClick={() => handleInscription(matriculeEtu, item.idExam, item.date)} className="btn btn-primary w-100">
+                                                        <b>Inscrire</b>
+                                                    </button>
+                                                )}
                                             </div>
+
                                         </div>
                                     </div>
                                 ))
                             }
-
-
 
                         </div>
                     </div>

@@ -1,6 +1,7 @@
 const examen = require('../models/examen');
 const etudiant = require('../models/etudiant');
 const Utilisateurs = require('../models/utilisateurs');
+const inscription = require('../models/inscription');
 
 async function getExamen(req, res) {
 
@@ -23,6 +24,7 @@ async function getExamen(req, res) {
             });
         }
 
+
         const classe = new RegExp(`${etu.mention} ${etu.niveau}`, 'i');
 
         const examens = await examen.find({ classe: classe, statut: 'En cours' });
@@ -31,6 +33,10 @@ async function getExamen(req, res) {
                 error: "Aucun information trouve"
             });
         }
+
+        const examId = examens.map(id => id.idExam);
+
+        const inscriptionAssocie = await inscription.find({ idExam: { $in: examId } });
 
         const examensAvecDates = examens.map(exam => {
             const examStart = new Date(exam.dateExam);
@@ -44,7 +50,6 @@ async function getExamen(req, res) {
             const examEnd = new Date(examStart);
             examEnd.setHours(heureFinHeure, heureFinMinute);
 
-
             exam.examStart = examStart;
             exam.examEnd = examEnd;
 
@@ -53,9 +58,9 @@ async function getExamen(req, res) {
 
         const examenTries = examensAvecDates.sort((a, b) => a.examStart - b.examStart);
 
-        return res.json({ etu, examens, examenTries });
+        return res.json({ etu, examenTries, inscriptionAssocie });
     } catch (error) {
-        return res.json({ erreur: "Erreur lors de la recuperation." });
+        return res.json({ erreur: "Erreur lors de la recuperation.", error });
     }
 
 }

@@ -51,7 +51,7 @@ function NotificationContent() {
         api.get('/notifications')
             .then((rep) => {
                 // console.log(rep.data);
-                // console.log(rep.data.message);
+                // console.log(rep.data);
                 setNotifications(rep.data);
             })
     }
@@ -184,44 +184,50 @@ function NotificationContent() {
                         <div className="card-body">
 
                             {
-                                notifications.map((not, index) => (
 
-                                    <div key={index} className={not.ma_notification.statutNot === "Non lu" ? "fw-bold" : ""}>
-                                        <div className="d-flex">
-                                            <div className="avatar avatar">
-                                                <span
-                                                    className="avatar-title rounded-circle border border-white"
-                                                    style={{ backgroundColor: getColorForLetter(nom.charAt(0)) }}
-                                                >{nom.charAt(0)}</span>
-                                            </div>
-                                            <div className="flex-1 ms-5 pt-1">
-                                                <h6 className="text-uppercase fw-bold mb-1">
-                                                    {nom}
-                                                    <span className={not.ma_notification.statutNot === "Non lu" ? "text-warning ps-3" : "text-success ps-3"}>{not.ma_notification.statutNot}</span>
-                                                </h6>
-                                                <span className="text-muted ">
-                                                    {not.notificationOriginal.titre}
-                                                </span>
+                                notifications.length > 0 ? (
+                                    notifications.map((not, index) => (
 
-
-                                            </div>
-                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-
-                                                <div className="float-end pt-1">
-                                                    <span className="text-muted">{formatDate(not.ma_notification.dateRecept)}</span>
+                                        <div key={index} className={not.ma_notification.statutNot === "Non lu" ? "fw-bold" : ""}>
+                                            <div className="d-flex">
+                                                <div className="avatar avatar">
+                                                    <span
+                                                        className="avatar-title rounded-circle border border-white"
+                                                        style={{ backgroundColor: getColorForLetter(nom.charAt(0)) }}
+                                                    >{nom.charAt(0)}</span>
                                                 </div>
-                                                <div className='float-end pt-3'>
-                                                    <i className='fa fa-eye' onClick={() => showNotificationDetails(not)} style={{ cursor: 'pointer', fontSize: '20px' }}></i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                                    <i className='fa fa-trash-alt text-danger' onClick={() => deleteNotification(not.ma_notification.idNot)} style={{ cursor: 'pointer', fontSize: '20px' }}></i>
+                                                <div className="flex-1 ms-5 pt-1">
+                                                    <h6 className="text-uppercase fw-bold mb-1">
+                                                        {nom}
+                                                        <span className={not.ma_notification.statutNot === "Non lu" ? "text-warning ps-3" : "text-success ps-3"}>{not.ma_notification.statutNot}</span>
+                                                    </h6>
+                                                    <span className="text-muted ">
+                                                        {not.notificationOriginal.titre}
+                                                    </span>
+
+
                                                 </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+
+                                                    <div className="float-end pt-1">
+                                                        <span className="text-muted">{formatDate(not.ma_notification.dateRecept)}</span>
+                                                    </div>
+                                                    <div className='float-end pt-3'>
+                                                        <i className='fa fa-eye' onClick={() => showNotificationDetails(not)} style={{ cursor: 'pointer', fontSize: '20px' }}></i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                                        <i className='fa fa-trash-alt text-danger' onClick={() => deleteNotification(not.ma_notification.idNot)} style={{ cursor: 'pointer', fontSize: '20px' }}></i>
+                                                    </div>
+                                                </div>
+
+
                                             </div>
-
-
+                                            <div className="separator-dashed"></div>
                                         </div>
-                                        <div className="separator-dashed"></div>
-                                    </div>
+                                    )
+                                    )
+                                ) : (
+                                    <div className="text-center">Aucun nouvelles notifications trouvees</div>
                                 )
-                                )
+
                             }
 
 

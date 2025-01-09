@@ -6,6 +6,8 @@ const Utilisateurs = require('../models/utilisateurs');
 const notification = require('../models/notification');
 const notificationEtu = require('../models/notificationEtudiant');
 const Counter = require('../models/counter');
+const historique = require('../models/historique');
+const { getNextSequenceValueHisto } = require('./historiqueController');
 
 async function CreerInscription(req, res) {
     try {
@@ -43,14 +45,35 @@ async function CreerInscription(req, res) {
         const paiementsManquantes = moisrequis.filter(m => !moisPayes.includes(m));
 
 
-
         const seqNumber = await getNextSequenceValue('notificationId');
         const idNot = `NOT_${seqNumber.toString().padStart(2, '0')}`;
 
+        const inscriptionExistant = await inscription.findOne({
+            idExam: idExamen,
+        });
+
+        if (inscriptionExistant) {
+            return res.json({
+                message: "Desole! Vous etes deja inscrit a cet examen."
+            })
+        }
+
+        const exmInfo = await examen.findOne({ idExam: idExamen });
+
+        const incrip = new inscription({
+            etudiantMatricule: etudiantId,
+            idExam: idExamen,
+            statutIns: 'Valide'
+        });
+
+        await incrip.save();
+
         const newNotification = new notification({
             idNot: idNot,
-            titre: "Inscription a l'examen ...",
-            objet: "Votre inscription a l'examen ... du ... est valide.",
+            titre: `Inscription a la session d'examen ${exmInfo.codeExam}`,
+            objet: `Votre inscription a l'examen ${exmInfo.matiere} 
+            de la session ${exmInfo.codeExam} 
+            qui debutera le ${exmInfo.dateExam} est valide.`,
             dateEnvoi: new Date()
         })
 
@@ -64,22 +87,27 @@ async function CreerInscription(req, res) {
 
         await newNotificationEtudiant.save();
 
-        if (paiementsManquantes.length > 0) {
-            return res.json({
-                erreur: "Paiements incomplets",
-                paiementsManquantes
-            })
-        }
+        // if (paiementsManquantes.length > 0) {
+        //     return res.json({
+        //         erreur: "Paiements incomplets",
+        //         paiementsManquantes
+        //     })
+        // }
 
-        // const incrip = new inscription({
-        //     etudiantMatricule: etudiantId,
-        //     idExam: idExamen,
-        //     statutIns: 'Valide'
-        // });
+        const sqHistoNum = await getNextSequenceValueHisto('histoId');
+        const idHisto = `H_${sqHistoNum.toString().padStart(2, '0')}`;
 
-        // await incrip.save();
+        const newhistorique = new historique({
+            etuMatricule: etudiantId,
+            dateHisto: new Date(),
+            idHisto: idHisto,
+            motifHisto: `Inscription a l'examen "${exmInfo.matiere}" de la session "${exmInfo.codeExam}"`,
+            statutHisto: "Valide"
+        });
 
-        re.json({
+        await newhistorique.save();
+
+        return res.json({
             succes: "Inscription reussie"
         });
 
@@ -118,32 +146,32 @@ async function getInscriptionValideCount(req, res) {
 
         const matriculeEtu = etu.matricule;
 
-        const inscriptionsValide = await inscription.find({
+        const inscriptionsValide1 = await inscription.find({
             etudiantMatricule: matriculeEtu,
-            statutInsc: "Valide"
+            statutIns: 'Valide',
         });
 
-        if (inscriptionsValide.length === 0) {
+        if (inscriptionsValide1.length === 0) {
             return res.json({
                 message: "Aucune inscription valide trouvée"
             });
         }
 
-        const examIds = inscriptionsValide.map(insc => insc.idExam);
+        const examIds = inscriptionsValide1.map(insc => insc.idExam);
 
-        const InscriptionValide = await examen.find({
+        const InscriptionValide2 = await examen.find({
             idExam: { $in: examIds },
-            statut: "En cours"
+            statut: 'En cours'
         });
 
         const examEnCoursCount = await examen.find({
-            statut: "En cours"
+            statut: 'En cours'
         });
 
         return res.json({
             succes: true,
             examEnCoursCount: examEnCoursCount.length,
-            nbInscriptionValide: InscriptionValide.length,
+            nbInscriptionValide: InscriptionValide2.length,
         });
 
     } catch (error) {
@@ -285,15 +313,16 @@ async function getInscriptionEnCoursParEtudiant(req, res) {
 
 async function supprimerInscription(req, res) {
     try {
-        const { idInsc } = req.params;
+        const { idInscription } = req.params;
+        // console.log(idInscription);
 
-        if (!idInsc) {
+        if (!idInscription) {
             return res.json({
                 message: "Identifiant de l'inscription manquant"
             })
         }
 
-        const inscriptionSupprime = await inscription.findByIdAndDelete(idInsc);
+        const inscriptionSupprime = await inscription.findByIdAndDelete(idInscription);
 
         if (!inscriptionSupprime) {
             return res.json({

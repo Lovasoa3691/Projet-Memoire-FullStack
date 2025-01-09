@@ -15,7 +15,7 @@ router.get('/updateExamStatus', mettreAjourStatutExam);
 // router.get('/inscriptions/count', verifieToken, getInscriptionValideCount);
 router.post('/inscrire', CreerInscription);
 router.get('/inscriptions', verifieToken, getInscriptionParEtudiant);
-router.delete('/inscription/:id', supprimerInscription);
+router.delete('/inscription/:idInscription', supprimerInscription);
 
 // router.post('/inscription', inscription);
 

@@ -2,6 +2,9 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const Utilisateurs = require('../models/utilisateurs');
 const etudiant = require('../models/etudiant');
+const administration = require('../models/administration');
+const utilisateurs = require('../models/utilisateurs');
+const adminCounter = require('../models/adminCounter');
 
 const secretKey = process.env.SECRET_KEY || "mySecretKey3691";
 const refreshKey = process.env.REFRESH_SECRET_KEY || "mySecretKey3691_refresh";
@@ -247,6 +250,48 @@ async function authentificate(req, res, next) {
     }
 }
 
+async function getNextSequenceValueAdmin(seq) {
+    const counter = await adminCounter.findByIdAndUpdate(
+        { _id: seq },
+        { $inc: { sequence_value: 1 } },
+        { new: true, upsert: true }
+    );
+
+    return counter.sequence_value
+}
+
+async function CreateSuperAdmin(req, res) {
+    const sqAdminValue = await getNextSequenceValueAdmin('adminId');
+    const idAdmin = `ADMIN_${sqAdminValue.toString().padStart(2, '0')}`;
+
+    const newAdmin = new administration({
+        idAdmin: idAdmin,
+        nomAdmin: "Orion",
+        prenomAdmin: "Scotty"
+    });
+
+    await newAdmin.save();
+
+    const mdp = 'admin3691'
+    const hashedPassword = await bcrypt.hash(mdp, 10);
+
+
+    const infoUtilisateur = new utilisateurs({
+        id_ut: newAdmin.idAdmin,
+        nom_ut: `${newAdmin.prenomAdmin} ${newAdmin.nomAdmin}`,
+        email: 'orionscotty@gmail.com',
+        mdp: hashedPassword,
+        role: 'Admin',
+        statut_ut: 'Active'
+    });
+
+    await infoUtilisateur.save();
+
+    return res.json({
+        message: 'Super admin ajoute'
+    });
+}
+
 module.exports = {
     login,
     logout,
@@ -254,5 +299,7 @@ module.exports = {
     getUtilisateur,
     authentificate,
     verifieToken,
-    verifieRefreshToken
+    verifieRefreshToken,
+    CreateSuperAdmin,
+    getNextSequenceValueAdmin
 };

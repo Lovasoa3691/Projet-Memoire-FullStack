@@ -1,12 +1,7 @@
 
 import { useEffect, useState } from "react";
-import LineChart from "../../chart/lineChart";
-import "bootstrap-notify"
-// import $ from "jquery"
-import swal from "sweetalert";
-
 import { Sparklines, SparklinesLine, SparklinesBars, SparklinesSpots } from "react-sparklines";
-import axios from "axios";
+
 import api from "../API/api";
 import Swal from "sweetalert2";
 
@@ -14,11 +9,13 @@ import Swal from "sweetalert2";
 const Dashboard = () => {
 
     const [notificationRecent, setNotificationRecent] = useState([]);
+    const [prochaineExam, setProchaineExam] = useState([]);
     const nom = "INSTITUT DE FORMATION TECHNIQUIE"
     const [timeLeft, setTimeLeft] = useState({
         j: 0, h: 0, min: 0, sec: 0
     });
-    const [minDate, setMinDate] = useState('');
+    const [minDate, setMinDate] = useState('Non identifie');
+    const [mat, setMat] = useState('Aucun');
     const [nbExamEnCours, setNbExamEnCours] = useState('');
     const [nbInscription, setNbInscription] = useState('');
     const [erreur, setErreur] = useState(null);
@@ -44,7 +41,6 @@ const Dashboard = () => {
         return `${year}/${month}/${day}`;
     };
 
-    const [prochaineExam, setProchaineExam] = useState([]);
 
     const getColorForLetter = (letter) => {
         const firstLetter = letter.toUpperCase();
@@ -106,7 +102,7 @@ const Dashboard = () => {
         try {
             api.get('/prochaineExam')
                 .then((rep) => {
-                    // console.log(rep.data.examenTries);
+                    // console.log(rep.data);
                     setProchaineExam(rep.data.examenTries);
                 })
         } catch (error) {
@@ -162,7 +158,7 @@ const Dashboard = () => {
         try {
             api.get('/examen/count')
                 .then((rep) => {
-                    // console.log(rep.data.examEnCoursCount);
+                    // console.log(rep.data);
                     setNbExamEnCours(rep.data.examEnCoursCount);
                     setNbInscription(rep.data.nbInscriptionValide)
                 })
@@ -171,6 +167,23 @@ const Dashboard = () => {
             setErreur("Serveur est indisponible pour le moment. Veullez ressayer s'il vous plait");
         }
 
+    }
+
+    const chargerProchaineInsc = () => {
+        try {
+            api.get('/inscriptions')
+                .then((rep) => {
+                    // console.log(rep.data);
+                    setMinDate(rep.data[0].mon_examen.dateExam);
+                    // setMat(rep.data[0].mon_examen.matiere);
+                })
+                .catch((error) => {
+                    console.log("Erreur lors de la recuperation des donnees: ", error);
+                })
+        } catch (error) {
+            console.log("Serveur est indisponible pour le moment");
+            setErreur("Serveur est indisponible pour le moment. Veullez ressayer s'il vous plait");
+        }
     }
 
     useEffect(() => {
@@ -192,7 +205,8 @@ const Dashboard = () => {
         if (prochaineExam.length > 0) {
             const timer = setInterval(() => {
                 setTimeLeft(getIntervaleTemps());
-            }, 60000);
+                setMat(prochaineExam[0].matiere);
+            }, 1000);
 
             return () => clearInterval(timer);
         }
@@ -200,21 +214,20 @@ const Dashboard = () => {
     }, [prochaineExam]);
 
     useEffect(() => {
-        try {
-            api.get('/inscriptions')
-                .then((rep) => {
-                    // console.log(rep.data);
-                    setMinDate(rep.data[0].mon_examen.dateExam);
-                })
-                .catch((error) => {
-                    console.log("Erreur lors de la recuperation des donnees: ", error);
-                })
-        } catch (error) {
-            console.log("Serveur est indisponible pour le moment");
-            setErreur("Serveur est indisponible pour le moment. Veullez ressayer s'il vous plait");
-        }
+        chargerProchaineInsc();
+        const timer = setInterval(() => {
+            chargerProchaineInsc();
+        }, 1000);
 
+        return () => clearInterval(timer);
     }, [])
+
+    const createSuperAdmin = () => {
+        api.post('/utilisateur/create-admin')
+            .then((rep) => {
+                alert(rep.data.message)
+            });
+    }
 
 
 
@@ -232,6 +245,7 @@ const Dashboard = () => {
                     </div>
 
                     <div className="row">
+                        {/* <button onClick={createSuperAdmin}>Nouveau Admin</button> */}
                         <div className="col-md-4">
                             <div className="card card-secondary bg-secondary-gradient">
                                 <div className="card-body skew-shadow">
@@ -244,12 +258,29 @@ const Dashboard = () => {
                                     <div className="row">
                                         <div className="col-8 pe-0">
                                             <h3 className="fw-bold mb-1">Semaine du</h3>
-                                            <div className="text-md text-uppercase fw-bold op-8">
-                                                {formatDate2(minDate)}
-                                            </div>
+                                            {
+                                                minDate === "" ? (
+                                                    <div className="text-md text-uppercase fw-bold op-8">
+                                                        Non identifie
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-md text-uppercase fw-bold op-8">
+                                                        {formatDate2(minDate)}
+                                                    </div>
+                                                )
+                                            }
+
                                         </div>
                                         <div className="col-4 ps-0 text-end">
-                                            <h3 className="fw-bold mb-1 ">{nbExamEnCours}</h3>
+                                            {
+                                                nbExamEnCours === "" ? (
+                                                    <h3 className="fw-bold mb-1 ">0</h3>
+                                                ) : (
+
+                                                    <h3 className="fw-bold mb-1 ">{nbExamEnCours}</h3>
+                                                )
+                                            }
+
                                             <div className="text-md text-uppercase fw-bold op-8">
                                                 Total
                                             </div>
@@ -271,11 +302,17 @@ const Dashboard = () => {
                                         <div className="col-8 pe-0">
                                             <h3 className="fw-bold mb-1">Valide</h3>
                                             <div className="text-md text-uppercase fw-bold op-8">
-                                                {/* Card Holder */}
+                                                .
                                             </div>
                                         </div>
                                         <div className="col-4 ps-0 text-end">
-                                            <h3 className="fw-bold mb-1">{nbInscription}</h3>
+                                            {
+                                                nbInscription === "" ? (
+                                                    <h3 className="fw-bold mb-1 ">0</h3>
+                                                ) : (
+                                                    <h3 className="fw-bold mb-1 ">{nbInscription}</h3>
+                                                )
+                                            }
                                             <div className="text-md text-uppercase fw-bold op-8">
                                                 Total
                                             </div>
@@ -292,7 +329,7 @@ const Dashboard = () => {
                                         height="15"
                                         alt=""
                                     />
-                                    <h2 className="py-4 mb-0">Sceance Suivante</h2>
+                                    <h2 className="py-4 mb-0">Sceance Suivante <strong>[{mat}]</strong></h2>
                                     <div className="row">
                                         <div className="col-8 pe-0">
                                             <h3 className="fw-bold mb-1">dans</h3>
@@ -385,35 +422,41 @@ const Dashboard = () => {
                                 </div>
 
 
+
                                 <div className="card-body" style={{ height: '500px', minHeight: '500px' }}>
-                                    <div className="table-responsive">
+                                    {
+                                        prochaineExam.length > 0 ? (
+                                            <div className="table-responsive">
 
-                                        <table className="table table-bordered table-head-bg-success  mt-0">
-                                            <thead>
-                                                <tr className='text-center fw-bold'>
-                                                    <th scope='col'>SESSION</th>
-                                                    <th scope="col">DATE</th>
-                                                    <th scope="col">MATIERE</th>
-                                                    <th scope="col">HORAIRE</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {
-                                                    prochaineExam.map((ex, index) => (
-                                                        <tr key={index} data-key={ex.idExam} className="text-center">
-                                                            <td>{ex.codeExam}</td>
-                                                            <td>{formatDate2(ex.dateExam)}</td>
-                                                            <td>{ex.matiere}</td>
-                                                            <td>{ex.heureDebut} - {ex.heureFin}</td>
+                                                <table className="table table-bordered table-head-bg-success  mt-0">
+                                                    <thead>
+                                                        <tr className='text-center fw-bold'>
+                                                            <th scope='col'>SESSION</th>
+                                                            <th scope="col">DATE</th>
+                                                            <th scope="col">MATIERE</th>
+                                                            <th scope="col">HORAIRE</th>
                                                         </tr>
-                                                    ))
-                                                }
+                                                    </thead>
+                                                    <tbody>
+                                                        {
+                                                            prochaineExam.map((ex, index) => (
+                                                                <tr key={index} data-key={ex.idExam} className="text-center">
+                                                                    <td>{ex.codeExam}</td>
+                                                                    <td>{formatDate2(ex.dateExam)}</td>
+                                                                    <td>{ex.matiere}</td>
+                                                                    <td>{ex.heureDebut} - {ex.heureFin}</td>
+                                                                </tr>
+                                                            ))
+                                                        }
+                                                    </tbody>
+                                                </table>
 
+                                            </div>
+                                        ) : (
+                                            <div className="text-center">Aucun examens trouves</div>
+                                        )
+                                    }
 
-                                            </tbody>
-                                        </table>
-
-                                    </div>
 
                                 </div>
 
