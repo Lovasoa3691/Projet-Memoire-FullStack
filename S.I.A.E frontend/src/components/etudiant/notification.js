@@ -185,7 +185,7 @@ function NotificationContent() {
 
                             {
 
-                                notifications.length > 0 ? (
+                                notifications && notifications.length > 0 ? (
                                     notifications.map((not, index) => (
 
                                         <div key={index} className={not.ma_notification.statutNot === "Non lu" ? "fw-bold" : ""}>

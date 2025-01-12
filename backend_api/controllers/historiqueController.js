@@ -98,7 +98,7 @@ async function supprimerHistorique(req, res) {
     try {
         const { idHisto } = req.params;
 
-        console.log(idHisto);
+        // console.log(idHisto);
 
         if (!idHisto) {
             return res.json({

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import DataTable from 'react-data-table-component';
 // import { DataGrid } from '@mui/x-data-grid';
 import axios from 'axios';
+import api from '../API/api';
+import swal from 'sweetalert';
 
 function ExamenContent() {
 
@@ -12,54 +14,70 @@ function ExamenContent() {
         //     sortable: true,
         // },
         {
-            name: "ID_EXAM",
-            selector: row => row.ID_EXAM,
+            name: "IDENTIFIANT",
+            selector: row => row.idExam,
             sortable: true,
         },
         {
-            name: "CODE_EXAM",
-            selector: row => row.CODE_EXAM,
+            name: "CODE EXAMEN",
+            selector: row => row.codeExam,
             sortable: true,
         },
         {
-            name: "DATE_EXAM",
-            selector: row => row.DATE_EXAM,
+            name: "DATE EXAMEN",
+            selector: row => row.dateExam,
             sortable: true,
         },
         {
-            name: "HEURE_DEBUT",
-            selector: row => row.HEURE_DEBUT,
+            name: "DEBUT",
+            selector: row => row.heureDebut,
             sortable: true,
         },
         {
-            name: "HEURE_FIN",
-            selector: row => row.HEURE_FIN,
+            name: "FIN",
+            selector: row => row.heureFin,
             sortable: true,
         },
         {
             name: "MATIERE",
-            selector: row => row.MATIERE,
+            selector: row => row.matiere,
             sortable: true,
         },
         {
             name: "DUREE",
-            selector: row => row.DUREE,
+            selector: row => row.duree,
             sortable: true,
         },
         {
-            name: "ACTION",
+            name: "CLASSE",
+            selector: row => row.classe,
+            sortable: true,
+        },
+        {
+            name: "STATUT",
+            selector: row => (
+                <span className={row.statut === "En cours" ? "badge badge-warning" : "badge badge-primary"}>
+                    {row.statut}
+                </span>
+            ),
+            sortable: true,
+        },
+        {
+            name: "ACTIONS",
             cell: (row) => (
-                <div className="form-button-action">
-                    <button className="btn btn-primary btn-sm">
-                        <i className="fa fa-edit"></i>
-                    </button>
-                    &nbsp; &nbsp;
-                    <button className="btn btn-danger btn-sm">
-                        <i className="fa fa-trash"></i>
-                    </button>
+                <div className="form-button-action" style={{ fontWeight: 'normal', fontSize: '20px' }}>
+                    <i className="fas fa-file-alt text-primary"
+                    ></i>
+                    &nbsp;&nbsp;&nbsp;
+                    <i className="fas fa-edit"
+                        onClick={() => openModalEdit(row)}
+                    ></i>
+                    &nbsp;&nbsp;
+                    <i className="fas fa-trash-alt text-danger"
+                        onClick={() => supprimeExamen(row)}
+                    ></i>
                 </div>
             )
-
         },
     ];
 
@@ -70,12 +88,29 @@ function ExamenContent() {
 
     const generateMentions = (categories, levels) => {
         return categories.flatMap(category =>
-            levels.map(level => ({ code: `${category}${level}` }))
+            levels.map(level => ({ code: `${category} ${level}` }))
         );
     };
 
-    const [mention, setMention] = useState(
-        generateMentions(["INFO", "BTP", "DROIT", "GM", "ICJ"], [1, 2, 3, 4, 5])
+
+    const [mention1, setMention1] = useState(
+        generateMentions(["INFO", "BTP", "DROIT", "GM", "ICJ"], ["L1"])
+    );
+
+    const [mention2, setMention2] = useState(
+        generateMentions(["INFO", "BTP", "DROIT", "GM", "ICJ"], ["L2"])
+    );
+
+    const [mention3, setMention3] = useState(
+        generateMentions(["INFO", "BTP", "DROIT", "GM", "ICJ"], ["L3"])
+    );
+
+    const [mention4, setMention4] = useState(
+        generateMentions(["INFO", "BTP", "DROIT", "GM", "ICJ"], ["M1"])
+    );
+
+    const [mention5, setMention5] = useState(
+        generateMentions(["INFO", "BTP", "DROIT", "GM", "ICJ"], ["M2"])
     );
 
     const paginationComponentOptions = {
@@ -86,37 +121,263 @@ function ExamenContent() {
         selectAllRowsItemText: "Tout",
     };
 
-
-
-    useEffect(() => {
-        // chargerExamens();
-        // console.log(JSON.stringify(EtuData))
-    }, []);
-
-    // useEffect(() => {
-    //     const filtrer = EtuData.filter(item =>
-    //         item.MATRICULE.toLowerCase().includes(search.toLowerCase()) ||
-    //         item.NOM.toLowerCase().includes(search.toLowerCase()) ||
-    //         item.PRENOM.toLowerCase().includes(search.toLowerCase()) ||
-    //         item.MENTION.toLowerCase().includes(search.toLowerCase()) ||
-    //         item.NIVEAU.toLowerCase().includes(search.toLowerCase())
-    //     );
-
-    //     setFiltre(filtrer);
-    // }, [search, EtuData]);
+    const [examenForm, setExamenForm] = useState({
+        idExam: '',
+        codeExam: '',
+        dateExam: '',
+        classe: [],
+        heureDebut: '',
+        heureFin: '',
+        matiere: ''
+        , duree: '',
+        admin: '',
+    })
 
     const chargerExamens = () => {
 
-        axios.get('http://localhost:5000/api/examens')
+        api.get('/examens/all')
             .then((rep) => {
-                // console.log(rep.data);
-                setExamData(rep.data);
-                setFiltre(rep.data);
+                setExamData(rep.data.examens);
+                // setFiltre(rep.data);
             })
             .catch(error => {
                 console.log("Erreur lors de la recuperation des donnees: ", error);
             })
     };
+
+    useEffect(() => {
+        chargerExamens();
+    }, []);
+
+    const saveExamen = (e) => {
+        e.preventDefault();
+        console.log(examenForm)
+        api.post('/examens/save', examenForm)
+            .then((rep) => {
+                if (rep.data.succes) {
+                    swal({
+                        text: `${rep.data.message}`,
+                        icon: "success",
+                        buttons: false,
+                        timer: 1500
+                    },
+                    )
+                }
+                else {
+                    swal({
+                        text: `${rep.data.message}`,
+                        icon: "error",
+                        buttons: false,
+                        timer: 1500
+                    },
+                    )
+                }
+                chargerExamens();
+            })
+            .catch((err) => {
+                console.log("Erreur: ", err.message)
+            })
+    }
+
+    const updateSalle = (e) => {
+        e.preventDefault();
+        api.put(`/salles/update/${examenForm.idExam}`, examenForm)
+            .then((rep) => {
+                if (rep.data.succes) {
+                    swal({
+                        text: `${rep.data.message}`,
+                        icon: "success",
+                        buttons: false,
+                        timer: 1500
+                    },
+                    )
+                }
+                else {
+                    swal({
+                        text: `${rep.data.message}`,
+                        icon: "error",
+                        buttons: false,
+                        timer: 1500
+                    },
+                    )
+                }
+                chargerExamens();
+            })
+            .catch((err) => {
+                console.log("Erreur: ", err.message)
+            })
+    }
+
+    const supprimeExamen = (data) => {
+        if (data.statut === "En cours") {
+            swal("Desole ! Vous ne pouvez pas supprimer un examen en cours!", {
+                title: 'Interruption',
+                icon: "warning",
+                buttons: {
+                    confirm: {
+                        className: "btn btn-success",
+                    },
+                },
+            });
+        } else {
+            swal({
+                title: "Etes-vous sur?",
+                text: "Une fois supprime, vous ne pourrez plus recuperer ce fichier !",
+                icon: "warning",
+                buttons: {
+                    confirm: {
+                        text: "Oui",
+                        className: "btn btn-success",
+                    },
+                    cancel: {
+                        text: "Non",
+                        visible: true,
+                        className: "btn btn-danger"
+                    }
+                },
+                // dangerMode: true,
+            }).then((willDelete) => {
+                if (willDelete) {
+                    api.delete(`examens/delete/${data.idExam}`)
+                        .then((rep) => {
+                            if (rep.data.succes) {
+                                swal(`${rep.data.message}`, {
+                                    icon: "success",
+                                    buttons: {
+                                        confirm: {
+                                            className: "btn btn-success",
+                                        },
+                                    },
+                                });
+                                chargerExamens();
+                            } else {
+                                swal(`${rep.data.message}`, {
+                                    icon: "error",
+                                    buttons: {
+                                        confirm: {
+                                            className: "btn btn-success",
+                                        },
+                                    },
+                                });
+                                chargerExamens();
+                            }
+                        })
+
+                } else {
+                    swal.close();
+                }
+            });
+        }
+    }
+
+    const [selectedItems, setSelectedItems] = useState([]);
+    const [selectedIndex, setSelectedIndex] = useState('');
+
+
+    const [isVisible, setVisible] = useState(false);
+    const [btnLabel, setBtnLabel] = useState('Enregistrer');
+    const [isEdit, setIsEdit] = useState(false);
+
+    const viderChamp = () => {
+        examenForm.idExam = ''
+        examenForm.codeExam = ''
+        examenForm.dateExam = ''
+        examenForm.classe = []
+        examenForm.heureDebut = ''
+        examenForm.heureFin = ''
+        examenForm.matiere = ''
+        examenForm.duree = ''
+    }
+
+    const handleChangeData = (e) => {
+        const { name, value } = e.target;
+        setExamenForm({ ...examenForm, [name]: value });
+    }
+
+
+    const formatDate = (dateString) => {
+        const date = new Date(dateString); // Conversion si nécessaire
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Mois commence à 0
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}/${month}/${day}`;
+    }
+
+
+    const openModalEdit = (data) => {
+        setVisible(true)
+        setIsEdit(true);
+        setBtnLabel('Mettre a jour');
+
+        examenForm.idExam = data.idExam
+        examenForm.codeExam = data.codeExam
+        examenForm.dateExam = formatDate(data.dateExam)
+        // examenForm.classe = data.classe
+        examenForm.heureDebut = data.heureDebut
+        examenForm.heureFin = data.heureFin
+        examenForm.matiere = data.matiere
+        examenForm.duree = data.duree
+    }
+
+    const openModal = () => {
+        setVisible(true);
+        viderChamp();
+        setBtnLabel('Enregistrer');
+    }
+
+    const closeModal = () => {
+        setVisible(false);
+        setIsEdit(false);
+        viderChamp();
+        setBtnLabel('Enregistrer');
+    }
+
+    const handleCheckChange = (value) => {
+        setSelectedItems((prev) => {
+            if (prev.includes(value)) {
+                return prev.filter((item) => item !== value)
+            } else {
+                return [...prev, value]
+            }
+        });
+    }
+
+    const handleCheckChangeFinal = (value) => {
+        setExamenForm((prev) => {
+            const updtedClasse = prev.classe.includes(value) ?
+                prev.classe.filter((item) => item !== value)
+                : [...prev.classe, value];
+            // if (prev.includes(value)) {
+            //     return prev.filter((item) => item !== value)
+            // } else {
+            //     return [...prev, value]
+            // }
+
+            return { ...prev, classe: updtedClasse };
+        });
+    }
+
+    const handleSelectChange = (e) => {
+        setSelectedIndex(e.target.value);
+        // examenForm.codeExam = e.target.value;
+    }
+
+    const [salleData, setSalleData] = useState([]);
+
+    const chargerSalles = () => {
+        try {
+            api.get('/salles')
+                .then((rep) => {
+                    setSalleData(rep.data.salle)
+                })
+        } catch (error) {
+            console.log(error.message)
+        }
+    }
+
+    useEffect(() => {
+        chargerSalles();
+    }, []);
 
     return (
         <div className="container">
@@ -135,8 +396,9 @@ function ExamenContent() {
                                     {/* <h4 className="card-title">Add Row</h4> */}
                                     <button
                                         className="btn btn-primary btn-round ms-auto"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#addRowModal"
+                                        onClick={openModal}
+                                    // data-bs-toggle="modal"
+                                    // data-bs-target="#addRowModal"
                                     >
                                         <i className="fa fa-plus">&nbsp;&nbsp;</i>
                                         Creer Session
@@ -146,156 +408,260 @@ function ExamenContent() {
                             <div className="card-body">
 
                                 {/* <!-- Modal --> */}
-                                <div
-                                    className="modal fade"
-                                    id="addRowModal"
-                                    // tabindex="-1"
-                                    role="dialog"
-                                    aria-hidden="true"
-                                >
-                                    <div className="modal-dialog" role="document">
-                                        <div className="modal-content">
-                                            <div className="modal-header border-0">
-                                                <h5 className="modal-title">
-                                                    <span className="fw-mediumbold"> Nouvelle</span>
-                                                    <span className="fw-light"> Enregistrement </span>
-                                                </h5>
-                                                <button
-                                                    type="button"
-                                                    className="close"
-                                                    data-dismiss="modal"
-                                                    aria-label="Close"
-                                                >
-                                                    <span aria-hidden="true">&times;</span>
-                                                </button>
-                                            </div>
-                                            <div className="modal-body">
-                                                {/* <p className="small">
+
+                                {
+                                    isVisible && (
+                                        <div
+                                            className="modal fade show d-block"
+                                            id="addRowModal"
+                                            // tabindex="-1"
+                                            role="dialog"
+                                            aria-hidden="true"
+                                        >
+                                            <form onSubmit={saveExamen}>
+                                                <div className="modal-dialog" role="document">
+                                                    <div className="modal-content">
+                                                        <div className="modal-header border-0">
+                                                            <h5 className="modal-title">
+                                                                <span className="fw-mediumbold"> Nouvelle</span>
+                                                                <span className="fw-light"> Enregistrement </span>
+                                                            </h5>
+                                                            <i className='fas fa-times fa-2x text-danger' onClick={closeModal}></i>
+                                                        </div>
+                                                        <div className="modal-body">
+                                                            {/* <p className="small">
                                                     Vous devraiz remplir tous les champs
                                                 </p> */}
-                                                <form>
-                                                    <div className="row">
-                                                        <div className="col-sm-12">
-                                                            <div className="form-group">
-                                                                <label>Code Examen</label>
-                                                                <select name='codeExam'
-                                                                    className="form-select"
-                                                                >
-                                                                    <option selected disabled>Choisir...</option>
-                                                                    <option>EXAM.S1</option>
-                                                                    <option>EXAM.S2</option>
-                                                                    <option>EXAM.S3</option>
-                                                                    <option>EXAM.S4</option>
-                                                                    <option>EXAM.S5</option>
-                                                                    <option>EXAM.S6</option>
-                                                                    <option>EXAM.S7</option>
-                                                                    <option>EXAM.S8</option>
-                                                                    <option>EXAM.S9</option>
-                                                                    <option>EXAM.S10</option>
-                                                                </select>
-                                                            </div>
-                                                        </div>
-                                                        <div className="col-sm-12">
-                                                            <div class="form-group">
-                                                                <label>Date de l'examen</label>
-                                                                <input
-                                                                    type="date"
-                                                                    className="form-control"
-                                                                    name="dateExam"
-                                                                    placeholder="Enter Email"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <div className="col-md-6 pe-0">
-                                                            <div className="form-group">
-                                                                <label>Heure debut</label>
-                                                                <input
-                                                                    name="heureDebut"
-                                                                    type="time"
-                                                                    className="form-control"
-                                                                    placeholder="fill position"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <div className="col-md-6">
-                                                            <div className="form-group">
-                                                                <label>Heure fin</label>
-                                                                <input
-                                                                    name="heureFin"
-                                                                    type="time"
-                                                                    className="form-control"
-                                                                    placeholder="fill office"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <div className="col-sm-12">
-                                                            <div className="form-group">
-                                                                <label>Matiere</label>
-                                                                <input
-                                                                    type="text"
-                                                                    className="form-control"
-                                                                    name="matiere"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <div className="col-sm-12">
-                                                            <div className="form-group">
-                                                                <label>Duree</label>
-                                                                <select
-                                                                    name="dureeExam"
-                                                                    className="form-select"
-                                                                >
-                                                                    <option>1</option>
-                                                                    <option>2</option>
-                                                                    <option>3</option>
-                                                                    <option>4</option>
-                                                                    <option>5</option>
-                                                                    <option>6</option>
-                                                                </select>
-                                                            </div>
-                                                        </div>
 
-                                                        {/* <div className="col-sm-12">
-                                                            <div className="form-group">
-                                                                <label className="form-label">Mention cible</label>
-                                                                <div className="selectgroup selectgroup-pills">
-                                                                    {mention.map(item => (
-                                                                        <label className="selectgroup-item" key={item.code}>
-                                                                            <input
-                                                                                type="checkbox"
-                                                                                name="value"
-                                                                                value="HTML"
-                                                                                className="selectgroup-input"
-                                                                                checked=""
-                                                                            />
-                                                                            <span className="selectgroup-button">{item.code}</span>
-                                                                        </label>
-                                                                    ))}
+                                                            <div className="row">
+                                                                <div className="col-sm-12">
+                                                                    <div className="form-group">
+                                                                        <label>Code Examen</label>
+                                                                        <select name='codeExam'
+                                                                            className="form-select"
+                                                                            onChange={handleChangeData}
+                                                                            value={examenForm.codeExam}
+                                                                        >
+                                                                            <option>Choisir...</option>
+                                                                            <option value='EXAM_S1' >S1</option>
+                                                                            <option value='EXAM_S2'>S2</option>
+                                                                            <option value='EXAM_S3'>S3</option>
+                                                                            <option value='EXAM_S4'>S4</option>
+                                                                            <option value='EXAM_S5'>S5</option>
+                                                                            <option value='EXAM_S6'>S6</option>
+                                                                            <option value='EXAM_S7'>S7</option>
+                                                                            <option value='EXAM_S8'>S8</option>
+                                                                            <option value='EXAM_S9'>S9</option>
+                                                                            <option value='EXAM_S10'>S10</option>
+                                                                        </select>
+                                                                    </div>
+
+                                                                    <div className="form-group">
+                                                                        <label>Salle</label>
+                                                                        <select name='salleExam'
+                                                                            className="form-select"
+                                                                            onChange={handleChangeData}
+                                                                            value={examenForm.salleExam}
+                                                                        >
+                                                                            <option selected>Choisir...</option>
+                                                                            {
+                                                                                salleData.map(item => (
+                                                                                    <option value={item.idSalle}>{item.numSalle}</option>
+                                                                                ))
+                                                                            }
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="col-sm-12">
+                                                                    <div className="form-group">
+                                                                        <label>Date de l'examen</label>
+                                                                        <input
+                                                                            onChange={handleChangeData}
+                                                                            value={examenForm.dateExam}
+                                                                            type="date"
+                                                                            className="form-control"
+                                                                            name="dateExam"
+
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="col-md-6 pe-0">
+                                                                    <div className="form-group">
+                                                                        <label>Heure debut</label>
+                                                                        <input
+                                                                            onChange={handleChangeData}
+                                                                            value={examenForm.heureDebut}
+                                                                            name="heureDebut"
+                                                                            type="time"
+                                                                            className="form-control"
+
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="col-md-6">
+                                                                    <div className="form-group">
+                                                                        <label>Heure fin</label>
+                                                                        <input
+                                                                            onChange={handleChangeData}
+                                                                            value={examenForm.heureFin}
+                                                                            name="heureFin"
+                                                                            type="time"
+                                                                            className="form-control"
+
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="col-sm-12">
+                                                                    <div className="form-group">
+                                                                        <label>Matiere</label>
+                                                                        <input
+                                                                            onChange={handleChangeData}
+                                                                            value={examenForm.matiere}
+                                                                            type="text"
+                                                                            className="form-control"
+                                                                            name="matiere"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="col-sm-12">
+                                                                    <div className="form-group">
+                                                                        <label>Duree</label>
+                                                                        <input type="text"
+                                                                            onChange={handleChangeData}
+                                                                            value={examenForm.duree}
+                                                                            className='form-control'
+                                                                            name='duree'
+                                                                        />
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="col-sm-12">
+                                                                    <div className="form-group">
+                                                                        <label className="form-label">Classe concernee</label>
+                                                                        <div className="selectgroup selectgroup-pills">
+                                                                            {
+                                                                                examenForm.codeExam === "EXAM_S1" || examenForm.codeExam === "EXAM_S2" ? (
+                                                                                    mention1 && mention1.map(item => (
+                                                                                        <label className="selectgroup-item" key={item.code}>
+                                                                                            <input
+                                                                                                onChange={() => handleCheckChangeFinal(item.code)}
+                                                                                                type="checkbox"
+                                                                                                name="classe"
+                                                                                                value={item.code}
+                                                                                                className="selectgroup-input"
+                                                                                                checked={examenForm.classe.includes(item.code)}
+                                                                                            />
+                                                                                            <span className="selectgroup-button">{item.code}</span>
+                                                                                        </label>
+                                                                                    )
+
+                                                                                    )
+                                                                                ) : examenForm.codeExam === "EXAM_S3" || examenForm.codeExam === "EXAM_S4" ? (
+                                                                                    mention2 && mention2.map(item => (
+                                                                                        <label className="selectgroup-item" key={item.code}>
+                                                                                            <input
+                                                                                                onChange={() => handleCheckChangeFinal(item.code)}
+                                                                                                type="checkbox"
+                                                                                                name="classe"
+                                                                                                value={item.code}
+                                                                                                className="selectgroup-input"
+                                                                                                checked={examenForm.classe.includes(item.code)}
+                                                                                            />
+                                                                                            <span className="selectgroup-button">{item.code}</span>
+                                                                                        </label>
+                                                                                    )
+
+                                                                                    )
+                                                                                ) : examenForm.codeExam === "EXAM_S5" || examenForm.codeExam === "EXAM_S6" ? (
+                                                                                    mention3 && mention3.map(item => (
+                                                                                        <label className="selectgroup-item" key={item.code}>
+                                                                                            <input
+                                                                                                onChange={() => handleCheckChangeFinal(item.code)}
+                                                                                                type="checkbox"
+                                                                                                name="classe"
+                                                                                                value={item.code}
+                                                                                                className="selectgroup-input"
+                                                                                                checked={examenForm.classe.includes(item.code)}
+                                                                                            />
+                                                                                            <span className="selectgroup-button">{item.code}</span>
+                                                                                        </label>
+                                                                                    )
+
+                                                                                    )
+                                                                                ) : examenForm.codeExam === "EXAM_S7" || examenForm.codeExam === "EXAM_S8" ? (
+                                                                                    mention4 && mention4.map(item => (
+                                                                                        <label className="selectgroup-item" key={item.code}>
+                                                                                            <input
+                                                                                                onChange={() => handleCheckChangeFinal(item.code)}
+                                                                                                type="checkbox"
+                                                                                                name="classe"
+                                                                                                value={item.code}
+                                                                                                className="selectgroup-input"
+                                                                                                checked={examenForm.classe.includes(item.code)}
+                                                                                            />
+                                                                                            <span className="selectgroup-button">{item.code}</span>
+                                                                                        </label>
+                                                                                    )
+
+                                                                                    )
+                                                                                ) : (
+                                                                                    mention5 && mention5.map(item => (
+                                                                                        <label className="selectgroup-item" key={item.code}>
+                                                                                            <input
+                                                                                                onChange={() => handleCheckChangeFinal(item.code)}
+                                                                                                type="checkbox"
+                                                                                                name="classe"
+                                                                                                value={item.code}
+                                                                                                className="selectgroup-input"
+                                                                                                checked={examenForm.classe.includes(item.code)}
+                                                                                            />
+                                                                                            <span className="selectgroup-button">{item.code}</span>
+                                                                                        </label>
+                                                                                    )
+
+                                                                                    )
+                                                                                )
+
+                                                                            }
+
+
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        </div> */}
-                                                    </div>
-                                                </form>
-                                            </div>
-                                            <div className="modal-footer border-0">
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-success"
-                                                >
-                                                    Enregistrer
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-danger"
-                                                    data-dismiss="modal"
-                                                >
-                                                    Fermer
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
 
+                                                        </div>
+                                                        <div className="modal-footer border-0">
+                                                            <button
+                                                                type="submit"
+                                                                className="btn btn-success"
+                                                            >
+                                                                <i className='fas fa-save'></i> &nbsp;&nbsp;
+                                                                Enregistrer
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-danger"
+                                                                data-dismiss="modal"
+                                                                onClick={closeModal}
+                                                            >
+                                                                <i className='fas fa-times'></i>&nbsp;&nbsp;
+                                                                Fermer
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    )
+                                }
+
+
+                                {
+                                    isVisible && (
+                                        <div className="modal-backdrop fade show"></div>
+                                    )
+                                }
 
 
                                 <div className="table-responsive">
@@ -313,8 +679,8 @@ function ExamenContent() {
                                             <input
                                                 type='text'
                                                 placeholder='Recherche'
-                                                value={search}
-                                                onChange={(e) => setSearch(e.target.value)}
+                                                // value={search}
+                                                // onChange={(e) => setSearch(e.target.value)}
 
                                                 style={{
                                                     padding: '7px',

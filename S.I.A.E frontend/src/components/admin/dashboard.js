@@ -113,7 +113,7 @@ const Dashboard = () => {
                                 <div className="row align-items-center">
                                     <div className="col-icon">
                                         <div className="icon-big text-center icon-success bubble-shadow-small">
-                                            <i className="fas fa-luggage-cart"></i>
+                                            <i className="icon-graduation"></i>
                                         </div>
                                     </div>
                                     <div className="col col-stats ms-3 ms-sm-0">
@@ -133,7 +133,7 @@ const Dashboard = () => {
                                 <div className="row align-items-center">
                                     <div className="col-icon">
                                         <div className="icon-big text-center icon-secondary bubble-shadow-small">
-                                            <i className="far fa-check-circle"></i>
+                                            <i className="icon-wallet"></i>
                                         </div>
                                     </div>
                                     <div className="col col-stats ms-3 ms-sm-0">
@@ -154,18 +154,18 @@ const Dashboard = () => {
                                 <div className="card-head-row">
                                     <div className="card-title">Statistiques des utilisateurs</div>
                                     <div className="card-tools">
-                                        <a href="" className="btn btn-label-success btn-round btn-sm me-2">
+                                        <div className="btn btn-label-success btn-round btn-sm me-2">
                                             <span className="btn-label">
                                                 <i className="fa fa-pencil"></i>
                                             </span>
                                             Exporter
-                                        </a>
-                                        <a href="" className="btn btn-label-info btn-round btn-sm">
+                                        </div>
+                                        <div className="btn btn-label-info btn-round btn-sm">
                                             <span className="btn-label">
                                                 <i className="fa fa-print"></i>
                                             </span>
                                             Imprimer
-                                        </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

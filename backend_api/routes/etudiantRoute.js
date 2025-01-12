@@ -1,16 +1,17 @@
 const express = require('express');
 const etudiant = require('../models/etudiant');
+const { AjouterEtudiant, supprimerEtudiant, mettreAjourEtudiant, getAllEtudiant } = require('../controllers/EtudiantController');
+const { verifieToken } = require('../controllers/AuthController');
 
 const router = express.Router();
 
-router.get('/etudiants', async (req, res) => {
-    try {
-        const etudiants = await etudiant.find();
-        res.json(etudiants);
-    } catch (error) {
-        res.json({ message: 'Erreur lors de la recuperation des donnees', error });
-    }
-});
+router.post('/etudiants/save', AjouterEtudiant);
+
+router.delete('/etudiants/delete/:matricule', supprimerEtudiant);
+
+router.put('/etudiants/update/:matricule', mettreAjourEtudiant);
+
+router.get('/etudiants', verifieToken, getAllEtudiant);
 
 router.get('/etudiants/count', async (req, res) => {
     try {

@@ -103,7 +103,7 @@ function HistoriqueContent() {
                             <ol className="activity-feed">
 
                                 {
-                                    histoData.map((data) => (
+                                    histoData && histoData.map((data) => (
                                         <li key={data.idHisto}
                                             className={data.statutHisto === "Valide" ? "feed-item feed-item-success mb-4" : data.statutHisto === "En attente" ? "feed-item feed-item-warning mb-4" : "feed-item feed-item-danger mb-4"}
                                         >

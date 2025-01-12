@@ -2,14 +2,14 @@
 const mongoose = require('mongoose');
 
 const SalleSchema = new mongoose.Schema({
-    idSalle: { type: Number },
-    numSalle: { type: String },
-    capacite: { type: Number },
-    localisation: { type: String }
+    idSalle: { type: String, required: true, unique: true },
+    numSalle: { type: String, required: true, unique: true },
+    capacite: { type: Number, required: true },
+    localisation: { type: String, required: true }
 });
 
 
-const salle = mongoose.model('salle', SalleSchema);
+const salle = mongoose.model('salles', SalleSchema);
 
 
 module.exports = salle;

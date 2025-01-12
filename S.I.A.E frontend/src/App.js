@@ -30,11 +30,6 @@ function App() {
 
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-    }, 1500);
-  });
 
   useEffect(() => {
     const scripts = [
@@ -57,6 +52,13 @@ function App() {
       scriptElements.forEach(script => document.body.removeChild(script));
     };
   }, []);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setLoading(false);
+    }, 1500);
+  });
+
 
   // const [user, setUser] = useState(() => {
   //   // const token = localStorage.getItem('token');

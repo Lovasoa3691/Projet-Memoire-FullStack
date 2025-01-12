@@ -107,7 +107,7 @@ function ExamenContent() {
                         <div className="row justify-content-start align-items-center">
 
                             {
-                                examensDispo.map((item) => (
+                                examensDispo && examensDispo.map((item) => (
                                     <div className="col-md-3 ps-md-0 pe-md-4" key={item.idExam}>
                                         <div className="card card-pricing card-pricing-focus">
                                             <div className="card-header">

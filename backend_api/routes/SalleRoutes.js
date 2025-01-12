@@ -1,15 +1,16 @@
 const express = require('express');
-const salle = require('../models/salle');
+const { getAllSalle, AjouterSalle, supprimerSalle, modifierSalle } = require('../controllers/SalleController');
+const { verifieToken } = require('../controllers/AuthController');
 
 const router = express.Router();
 
-router.get('/salles', async (req, res) => {
-    try {
-        const salles = await salle.find();
-        res.json(salles);
-    } catch (error) {
-        res.json({ message: 'Erreur lors de la recuperation des donnees', error });
-    }
-});
+router.get('/salles', verifieToken, getAllSalle);
+
+router.post('/salles/save', AjouterSalle);
+
+router.delete('/salles/delete/:idSalle', supprimerSalle);
+
+router.put('/salles/update/:idSalle', modifierSalle);
+
 
 module.exports = router;

@@ -202,7 +202,7 @@ const Dashboard = () => {
 
 
     useEffect(() => {
-        if (prochaineExam.length > 0) {
+        if (prochaineExam && prochaineExam.length > 0) {
             const timer = setInterval(() => {
                 setTimeLeft(getIntervaleTemps());
                 setMat(prochaineExam[0].matiere);
@@ -361,7 +361,7 @@ const Dashboard = () => {
                                 <div className="card-body" style={{ height: 'auto', minHeight: '500px' }}>
 
                                     {
-                                        notificationRecent.length > 0 ? (
+                                        notificationRecent && notificationRecent.length > 0 ? (
                                             notificationRecent.map((not, index) => (
 
                                                 <div key={index} className={not.ma_notification.statutNot === "Non lu" ? "fw-bold" : ""}>
@@ -425,7 +425,7 @@ const Dashboard = () => {
 
                                 <div className="card-body" style={{ height: '500px', minHeight: '500px' }}>
                                     {
-                                        prochaineExam.length > 0 ? (
+                                        prochaineExam && prochaineExam.length > 0 ? (
                                             <div className="table-responsive">
 
                                                 <table className="table table-bordered table-head-bg-success  mt-0">
@@ -439,7 +439,7 @@ const Dashboard = () => {
                                                     </thead>
                                                     <tbody>
                                                         {
-                                                            prochaineExam.map((ex, index) => (
+                                                            prochaineExam && prochaineExam.map((ex, index) => (
                                                                 <tr key={index} data-key={ex.idExam} className="text-center">
                                                                     <td>{ex.codeExam}</td>
                                                                     <td>{formatDate2(ex.dateExam)}</td>

@@ -91,7 +91,7 @@ function Home() {
                                     // aria-expanded="false"
                                     style={{ cursor: 'pointer' }}
                                 >
-                                    <i className="fas fa-th-list"></i>
+                                    <i className="fas fa-graduation-cap"></i>
                                     <p>Etudiants</p>
                                     {/* <span className="caret"></span> */}
 
@@ -106,7 +106,7 @@ function Home() {
                                     // aria-expanded="false"
                                     style={{ cursor: 'pointer' }}
                                 >
-                                    <i className="fas fa-pen-square"></i>
+                                    <i className="fas fa-calendar-alt"></i>
                                     <p>Session examens</p>
                                     {/* <span className="caret"></span> */}
 
@@ -134,7 +134,7 @@ function Home() {
                                     // aria-expanded="false"
                                     style={{ cursor: 'pointer' }}
                                 >
-                                    <i className="fas fa-map-marker-alt"></i>
+                                    <i className="fas fa-dollar-sign"></i>
                                     <p>Paiements</p>
                                     {/* <span className="caret"></span> */}
                                 </Link>
@@ -147,7 +147,7 @@ function Home() {
                                     // aria-expanded="false"
                                     style={{ cursor: 'pointer' }}
                                 >
-                                    <i className="fas fa-map-marker-alt"></i>
+                                    <i className="fas fa-users"></i>
                                     <p>Utilisateurs</p>
                                     {/* <span className="caret"></span> */}
                                 </Link>

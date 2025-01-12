@@ -1,5 +1,7 @@
 const examen = require('../models/examen');
 const paiement = require('../models/paiement');
+const etudiant = require('../models/etudiant');
+const paiementCounter = require('../models/paiementCounter');
 
 async function verifierPaiement(req, res) {
     try {
@@ -58,4 +60,84 @@ async function verifierPaiement(req, res) {
         });
 
     }
+}
+
+async function getNextSequenceValuePaiement(seq) {
+    const counter = await paiementCounter.findByIdAndUpdate(
+        { _id: seq },
+        { $inc: { sequence_value: 1 } },
+        { new: true, upsert: true }
+    );
+
+    return counter.sequence_value
+}
+
+async function getDistictPaiement(req, res) {
+    const paiements = await paiement.distinct('descriptionPaie', { etudiantId: 'E1151' })
+
+    return res.json({
+        paiements
+    })
+}
+
+async function getAllPaiement(req, res) {
+    const paiements = await paiement.find({ etudiantId: 'E1151' })
+
+    return res.json({
+        paiements
+    })
+}
+
+async function CreerPaiement(req, res) {
+    const { etudiantId, descriptionPaie, montant, } = req.body;
+
+    const etudniantsCible = await etudiant.findOne({ matricule: etudiantId });
+    const niveauEtu = etudniantsCible.niveau;
+    let FFMontant = 0;
+
+    switch (niveauEtu) {
+        case "L1": FFMontant = 50000
+            break;
+        case "L2": FFMontant = 70000
+            break;
+        case "L3": FFMontant = 80000
+            break;
+        case "M1": FFMontant = 100000
+            break;
+        default: FFMontant = 130000
+            break;
+    }
+
+    const montantPaye = FFMontant * descriptionPaie.length;
+
+    const statutPaie = montant < montantPaye ? "En cours" : "Complet";
+
+
+    const sqNumber = await getNextSequenceValuePaiement("paiementId");
+    const idPaie = `P_${sqNumber.toString().padStart(2, '0')}`;
+
+    const newPaiement = new paiement({
+        idPaie: idPaie,
+        typePaie: 'Frais de formation',
+        etudiantId: etudiantId,
+        descriptionPaie: descriptionPaie,
+        montant: montant,
+        modePaie: 'Espece',
+        statutPaie: statutPaie,
+        datePaie: new Date()
+    })
+
+    await newPaiement.save();
+
+    return res.json({
+        message: "Paiement a ete faite"
+    })
+}
+
+
+module.exports = {
+    getDistictPaiement,
+    getAllPaiement,
+    CreerPaiement,
+    verifierPaiement
 }

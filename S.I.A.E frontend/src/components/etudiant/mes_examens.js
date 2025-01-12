@@ -166,7 +166,7 @@ function MyExamContent() {
                                         <div className="card-body">
 
                                             {
-                                                mesExamens.length > 0 ? (
+                                                mesExamens && mesExamens.length > 0 ? (
                                                     <table className="table table-bordered table-head-bg-info table-bordered-bd-info mt-4">
                                                         <thead>
                                                             <tr className='text-center'>
