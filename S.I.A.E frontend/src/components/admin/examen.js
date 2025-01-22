@@ -67,6 +67,7 @@ function ExamenContent() {
             cell: (row) => (
                 <div className="form-button-action" style={{ fontWeight: 'normal', fontSize: '20px' }}>
                     <i className="fas fa-file-alt text-primary"
+                        onClick={() => afficherListeEtudiantInscrit(row)}
                     ></i>
                     &nbsp;&nbsp;&nbsp;
                     <i className="fas fa-edit"
@@ -151,10 +152,12 @@ function ExamenContent() {
 
     const saveExamen = (e) => {
         e.preventDefault();
-        console.log(examenForm)
+        // console.log(examenForm)
         api.post('/examens/save', examenForm)
             .then((rep) => {
+                console.log(rep.data)
                 if (rep.data.succes) {
+                    setVisible(false)
                     swal({
                         text: `${rep.data.message}`,
                         icon: "success",
@@ -172,6 +175,7 @@ function ExamenContent() {
                     },
                     )
                 }
+                setVisible(false)
                 chargerExamens();
             })
             .catch((err) => {
@@ -275,8 +279,14 @@ function ExamenContent() {
 
 
     const [isVisible, setVisible] = useState(false);
+    const [isVisibleList, setVisibleList] = useState(false);
     const [btnLabel, setBtnLabel] = useState('Enregistrer');
     const [isEdit, setIsEdit] = useState(false);
+
+    const [etudiantIsncrit, setEtudiantInscrit] = useState([]);
+
+    const [matiere, setMatiere] = useState('');
+    const [session, setSession] = useState('');
 
     const viderChamp = () => {
         examenForm.idExam = ''
@@ -287,6 +297,23 @@ function ExamenContent() {
         examenForm.heureFin = ''
         examenForm.matiere = ''
         examenForm.duree = ''
+    }
+
+    const afficherListeEtudiantInscrit = (data) => {
+        setMatiere(data.matiere)
+        setSession(data.codeExam)
+        try {
+            api.get(`/inscriptions/${data.idExam}`)
+                .then((rep) => {
+                    setEtudiantInscrit(rep.data)
+                })
+                .catch((error) => {
+                    console.log(error.message)
+                })
+            setVisibleList(true);
+        } catch (error) {
+            console.log(error.message)
+        }
     }
 
     const handleChangeData = (e) => {
@@ -317,6 +344,14 @@ function ExamenContent() {
         examenForm.heureFin = data.heureFin
         examenForm.matiere = data.matiere
         examenForm.duree = data.duree
+    }
+
+    const openListModal = () => {
+        setVisibleList(true);
+    }
+
+    const closeListModal = () => {
+        setVisibleList(false);
     }
 
     const openModal = () => {
@@ -416,7 +451,7 @@ function ExamenContent() {
                                             id="addRowModal"
                                             // tabindex="-1"
                                             role="dialog"
-                                            aria-hidden="true"
+
                                         >
                                             <form onSubmit={saveExamen}>
                                                 <div className="modal-dialog" role="document">
@@ -443,16 +478,16 @@ function ExamenContent() {
                                                                             value={examenForm.codeExam}
                                                                         >
                                                                             <option>Choisir...</option>
-                                                                            <option value='EXAM_S1' >S1</option>
-                                                                            <option value='EXAM_S2'>S2</option>
-                                                                            <option value='EXAM_S3'>S3</option>
-                                                                            <option value='EXAM_S4'>S4</option>
-                                                                            <option value='EXAM_S5'>S5</option>
-                                                                            <option value='EXAM_S6'>S6</option>
-                                                                            <option value='EXAM_S7'>S7</option>
-                                                                            <option value='EXAM_S8'>S8</option>
-                                                                            <option value='EXAM_S9'>S9</option>
-                                                                            <option value='EXAM_S10'>S10</option>
+                                                                            <option value='S1' >S1</option>
+                                                                            <option value='S2'>S2</option>
+                                                                            <option value='S3'>S3</option>
+                                                                            <option value='S4'>S4</option>
+                                                                            <option value='S5'>S5</option>
+                                                                            <option value='S6'>S6</option>
+                                                                            <option value='S7'>S7</option>
+                                                                            <option value='S8'>S8</option>
+                                                                            <option value='S9'>S9</option>
+                                                                            <option value='S10'>S10</option>
                                                                         </select>
                                                                     </div>
 
@@ -463,10 +498,10 @@ function ExamenContent() {
                                                                             onChange={handleChangeData}
                                                                             value={examenForm.salleExam}
                                                                         >
-                                                                            <option selected>Choisir...</option>
+                                                                            <option>Choisir...</option>
                                                                             {
                                                                                 salleData.map(item => (
-                                                                                    <option value={item.idSalle}>{item.numSalle}</option>
+                                                                                    <option key={item.idSalle} value={item.idSalle}>{item.numSalle}</option>
                                                                                 ))
                                                                             }
                                                                         </select>
@@ -540,7 +575,7 @@ function ExamenContent() {
                                                                         <label className="form-label">Classe concernee</label>
                                                                         <div className="selectgroup selectgroup-pills">
                                                                             {
-                                                                                examenForm.codeExam === "EXAM_S1" || examenForm.codeExam === "EXAM_S2" ? (
+                                                                                examenForm.codeExam === "S1" || examenForm.codeExam === "S2" ? (
                                                                                     mention1 && mention1.map(item => (
                                                                                         <label className="selectgroup-item" key={item.code}>
                                                                                             <input
@@ -556,7 +591,7 @@ function ExamenContent() {
                                                                                     )
 
                                                                                     )
-                                                                                ) : examenForm.codeExam === "EXAM_S3" || examenForm.codeExam === "EXAM_S4" ? (
+                                                                                ) : examenForm.codeExam === "S3" || examenForm.codeExam === "S4" ? (
                                                                                     mention2 && mention2.map(item => (
                                                                                         <label className="selectgroup-item" key={item.code}>
                                                                                             <input
@@ -572,7 +607,7 @@ function ExamenContent() {
                                                                                     )
 
                                                                                     )
-                                                                                ) : examenForm.codeExam === "EXAM_S5" || examenForm.codeExam === "EXAM_S6" ? (
+                                                                                ) : examenForm.codeExam === "S5" || examenForm.codeExam === "S6" ? (
                                                                                     mention3 && mention3.map(item => (
                                                                                         <label className="selectgroup-item" key={item.code}>
                                                                                             <input
@@ -588,7 +623,7 @@ function ExamenContent() {
                                                                                     )
 
                                                                                     )
-                                                                                ) : examenForm.codeExam === "EXAM_S7" || examenForm.codeExam === "EXAM_S8" ? (
+                                                                                ) : examenForm.codeExam === "S7" || examenForm.codeExam === "S8" ? (
                                                                                     mention4 && mention4.map(item => (
                                                                                         <label className="selectgroup-item" key={item.code}>
                                                                                             <input
@@ -656,9 +691,96 @@ function ExamenContent() {
                                     )
                                 }
 
+                                {/* Liste etudiants inscrits a l'examen */}
+                                {
+                                    isVisibleList && (
+                                        <div
+                                            className="modal fade show d-block"
+                                            id="addRowModal"
+                                            // tabindex="-1"
+                                            role="dialog"
+                                            aria-hidden="true"
+                                        >
+
+                                            <div className="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+                                                <div className="modal-content">
+                                                    <div className="modal-header border-0">
+                                                        <h5 className="modal-title">
+                                                            <span className="fw-mediumbold"> </span>
+                                                            <span className="fw-light"> Liste des etudiants inscrites a l'examen {matiere} du session {session} </span>
+                                                        </h5>
+                                                        <i className='fas fa-times fa-2x text-danger' onClick={closeListModal}></i>
+                                                    </div>
+                                                    <div className="modal-body">
+                                                        <div className="row">
+                                                            <div className="table-responsive">
+                                                                <div className="col-md-12">
+
+                                                                    {/* <div className="card"> */}
+                                                                    {/* <div className="card-header">
+                                                                        <div className="card-title">Journal de mes examens</div>
+                                                                    </div> */}
+                                                                    <div className="card-body">
+                                                                        <table className="table table-bordered table-head-bg-info table-bordered-bd-info mt-4">
+                                                                            <thead>
+                                                                                <tr className='text-center'>
+                                                                                    <th scope='col'>Matricule</th>
+                                                                                    <th scope="col">Nom & Prenom</th>
+                                                                                    <th scope="col">Mention</th>
+                                                                                    <th scope="col">Niveau</th>
+                                                                                </tr>
+                                                                            </thead>
+                                                                            <tbody className='text-center'>
+                                                                                {
+                                                                                    etudiantIsncrit && etudiantIsncrit.length > 0 ? (
+                                                                                        etudiantIsncrit.map(item => (
+                                                                                            <tr key={item.matricule}>
+                                                                                                <td>{item.matricule}</td>
+                                                                                                <td>{item.nomEtu} {item.prenomEtu}</td>
+                                                                                                <td>{item.mention}</td>
+                                                                                                <td>{item.niveau}</td>
+                                                                                            </tr>
+                                                                                        ))
+                                                                                    ) : (
+                                                                                        <div className='text-center'>Aucun etudiant inscrit</div>
+                                                                                    )
+                                                                                }
+
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+
+
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="modal-footer border-0">
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-primary btn-border"
+                                                        >
+                                                            <i className='fas fa-print'></i> &nbsp;&nbsp;
+                                                            Imprimer
+                                                        </button>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    )
+                                }
+
 
                                 {
                                     isVisible && (
+                                        <div className="modal-backdrop fade show"></div>
+                                    )
+                                }
+
+                                {
+                                    isVisibleList && (
                                         <div className="modal-backdrop fade show"></div>
                                     )
                                 }

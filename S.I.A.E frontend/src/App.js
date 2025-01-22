@@ -1,17 +1,11 @@
 // import logo from './logo.svg';
 // import './App.css';
 import './assets/css/bootstrap.min.css';
-// import './assets/css/plugins.min.css';
 import './assets/css/kaiadmin.min.css';
-// import './assets/css/all.min.css';
 import './assets/css/uf-style.css';
-// // Style CSS
-// import './assets/js/plugin/webfont/webfont.min';
 import './assets/css/fonts.min.css';
 import 'nprogress/nprogress.css'
 import './assets/css/nprogress-custom.css';
-// import $ from 'jquery';
-import axios from 'axios';
 
 import Login from './components/auth/login';
 import Register from './components/auth/register';
@@ -19,11 +13,7 @@ import HomeAdmin from './components/admin/home';
 import HomeEtudiant from './components/etudiant/homeEtu';
 import { BrowserRouter as Router, Route, Routes, useNavigate, Navigate } from 'react-router-dom';
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { ClipLoader } from "react-spinners";
 import api from './components/API/api';
-
-// import { LoadingProvider } from './components/spinner/loadingSpinner';
-
 export const UserContext = createContext();
 
 function App() {
@@ -59,15 +49,6 @@ function App() {
     }, 1500);
   });
 
-
-  // const [user, setUser] = useState(() => {
-  //   // const token = localStorage.getItem('token');
-  //   // if (!token) return null;
-
-  //   const userFromStorage = localStorage.getItem('user');
-  //   return userFromStorage ? JSON.parse(userFromStorage) : null;
-  // });
-
   const [user, setUser] = useState(undefined);
 
 
@@ -80,20 +61,14 @@ function App() {
 
     api.get('/utilisateur')
       .then((rep) => {
-
-        // console.log(rep.data.message);
-        // console.log(rep.data);
-
         const utilisateurConnecte = {
           idUt: rep.data.utilisateur['id_ut'],
           nomUt: rep.data.utilisateur['nom_ut'],
           mail: rep.data.utilisateur['email'],
           role: rep.data.utilisateur['role'],
         };
-
         setUser(utilisateurConnecte);
         localStorage.setItem('user', JSON.stringify(utilisateurConnecte));
-
       })
       .catch((error) => {
         console.log("Erreur: ", error);
@@ -101,35 +76,6 @@ function App() {
         setUser(null);
       })
   }, []);
-
-
-  // useEffect(() => {
-  //   const token = localStorage.getItem('token');
-  //   if (token) {
-
-  //     axios.get('http://localhost:5000/api/utilisateur', {
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     })
-  //       .then((rep) => {
-  //         // console.log(rep.data.utilisateur);
-  //         const utilisateur = {
-  //           idUt: rep.data.utilisateur['id_ut'],
-  //           nomUt: rep.data.utilisateur['nom_ut'],
-  //           mail: rep.data.utilisateur['email'],
-  //           role: rep.data.utilisateur['role'],
-  //         };
-
-  //         setUser(utilisateur);
-  //         localStorage.setItem('user', JSON.stringify(utilisateur));
-
-  //       })
-  //       .catch(() => {
-  //         localStorage.removeItem('token');
-  //         localStorage.removeItem('user');
-  //         setUser(null);
-  //       })
-  //   }
-  // }, []);
 
   const RouteProteger = ({ children, role }) => {
     const { user } = useContext(UserContext);

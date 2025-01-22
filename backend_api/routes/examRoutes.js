@@ -5,7 +5,9 @@ const { getExamen,
     getExamEnCoursCount,
     getAllExamens,
     supprimeExamen,
-    CreerExamen } = require('../controllers/ExamenController');
+    CreerExamen,
+    getExamenCount,
+    getAllExamEnCoursCount } = require('../controllers/ExamenController');
 
 const { authentificate, verifieToken } = require('../controllers/AuthController')
 
@@ -13,13 +15,19 @@ const { CreerInscription,
     getInscriptionParEtudiant,
     supprimerInscription,
     getInscriptionEnCoursParEtudiant,
-    getInscriptionValideCount } = require('../controllers/InscriptionController')
+    getInscriptionValideCount,
+    getInscription,
+    getAllInscriptions } = require('../controllers/InscriptionController')
 
 const router = express.Router();
 
 // router.use(verifieToken);
 
 router.get('/examens', verifieToken, getExamen);
+
+router.get('/examens/all/count', verifieToken, getExamenCount);
+
+router.get('/examens/encours/count', verifieToken, getAllExamEnCoursCount);
 
 router.post('/examens/save', verifieToken, CreerExamen)
 
@@ -35,7 +43,11 @@ router.get('/updateExamStatus', mettreAjourStatutExam);
 
 router.post('/inscrire', CreerInscription);
 
+router.get('/inscriptions/:idExam', getInscription);
+
 router.get('/inscriptions', verifieToken, getInscriptionParEtudiant);
+
+router.get('/inscriptions/etudiants/all', verifieToken, getAllInscriptions);
 
 router.delete('/inscription/:idInscription', supprimerInscription);
 

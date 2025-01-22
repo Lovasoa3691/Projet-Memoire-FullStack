@@ -152,9 +152,46 @@ async function supprimerEtudiant(req, res) {
     }
 }
 
+
+async function getEtudiantCount(req, res) {
+    try {
+        const InfoCount = await etudiant.find({
+            mention: "INFO"
+        })
+
+        const BtpCount = await etudiant.find({
+            mention: "BTP"
+        })
+
+        const DroitCount = await etudiant.find({
+            mention: "DROIT"
+        })
+
+        const GmCount = await etudiant.find({
+            mention: "GM"
+        })
+
+        const IcjCount = await etudiant.find({
+            mention: "ICJ"
+        })
+
+        return res.json({
+            Info: InfoCount.length,
+            Btp: BtpCount.length,
+            Droit: DroitCount.length,
+            Gm: GmCount.length,
+            Icj: IcjCount.length
+        });
+
+    } catch (error) {
+
+    }
+}
+
 module.exports = {
     getAllEtudiant,
     AjouterEtudiant,
     mettreAjourEtudiant,
-    supprimerEtudiant
+    supprimerEtudiant,
+    getEtudiantCount
 }

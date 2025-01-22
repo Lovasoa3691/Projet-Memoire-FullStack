@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import DataTable from 'react-data-table-component';
 // import { DataGrid } from '@mui/x-data-grid';
 import axios from 'axios';
+import api from '../API/api';
+import swal from 'sweetalert';
 
 function UtilisateurContent() {
 
@@ -11,37 +13,36 @@ function UtilisateurContent() {
         //     selector: row => row._id,
         //     sortable: true,
         // },
+        // {
+        //     name: "_ID",
+        //     selector: row => row.ID_EXAM,
+        //     sortable: true,
+        // },
         {
-            name: "_ID",
-            selector: row => row.ID_EXAM,
+            name: "NOM UTILISATEUR",
+            selector: row => row.nom_ut,
             sortable: true,
         },
         {
-            name: "NOM_UT",
-            selector: row => row.CODE_EXAM,
-            sortable: true,
-        },
-        {
-            name: "MAIL",
-            selector: row => row.DATE_EXAM,
+            name: "EMAIL",
+            selector: row => row.email,
             sortable: true,
         },
         {
             name: "ROLE",
-            selector: row => row.HEURE_DEBUT,
+            selector: row => row.role,
             sortable: true,
         },
         {
-            name: "ACTION",
+            name: "ACTIONS",
             cell: (row) => (
-                <div className="form-button-action">
-                    <button className="btn btn-primary btn-sm">
-                        <i className="fa fa-"></i>
-                    </button>
-                    &nbsp; &nbsp;
-                    <button className="btn btn-danger btn-sm">
-                        <i className="fa fa-times"></i>
-                    </button>
+                <div className="form-button-action" style={{ fontWeight: 'normal', fontSize: '20px' }}>
+                    <i className="fas fa-eye"
+                    ></i>
+                    &nbsp;&nbsp;
+                    <i className="fas fa-trash-alt text-danger"
+
+                    ></i>
                 </div>
             )
 
@@ -56,36 +57,147 @@ function UtilisateurContent() {
 
 
     useEffect(() => {
-        // chargerExamens();
-        // console.log(JSON.stringify(EtuData))
+        chargerUtilisateurs();
     }, []);
 
-    // useEffect(() => {
-    //     const filtrer = EtuData.filter(item =>
-    //         item.MATRICULE.toLowerCase().includes(search.toLowerCase()) ||
-    //         item.NOM.toLowerCase().includes(search.toLowerCase()) ||
-    //         item.PRENOM.toLowerCase().includes(search.toLowerCase()) ||
-    //         item.MENTION.toLowerCase().includes(search.toLowerCase()) ||
-    //         item.NIVEAU.toLowerCase().includes(search.toLowerCase())
-    //     );
 
-    //     setFiltre(filtrer);
-    // }, [search, EtuData]);
-
-    const chargerExamens = () => {
-
-        axios.get('http://localhost:5000/api/examens')
+    const chargerUtilisateurs = () => {
+        api.get('/utilisateur/all')
             .then((rep) => {
                 // console.log(rep.data);
-                setutilisateurData(rep.data);
-                setFiltre(rep.data);
+                setutilisateurData(rep.data.users);
+                setFiltre(rep.data.users);
             })
             .catch(error => {
                 console.log("Erreur lors de la recuperation des donnees: ", error);
             })
-
-
     };
+
+    const desactiverUtilisateur = (item) => {
+        if (item.statut_ut === "En ligne") {
+            swal("Desole ! L'utilisateur est en ligne pour le moment. Nous ne pouvons la desactiver maintenant.", {
+                title: 'Interruption',
+                icon: "error",
+                buttons: {
+                    confirm: {
+                        className: "btn btn-success",
+                    },
+                },
+            });
+        } else {
+            swal({
+                title: "Etes-vous sur?",
+                text: "Une fois supprime, vous ne pourrez plus retourner en arriere !",
+                icon: "warning",
+                buttons: {
+                    confirm: {
+                        text: "Oui",
+                        className: "btn btn-success",
+                    },
+                    cancel: {
+                        text: "Non",
+                        visible: true,
+                        className: "btn btn-danger"
+                    }
+                },
+                // dangerMode: true,
+            }).then((willDelete) => {
+                if (willDelete) {
+                    api.put(`/utilisateur/update/${item._id}`)
+                        .then((rep) => {
+                            if (rep.data.succes) {
+                                swal(`${rep.data.message}`, {
+                                    icon: "success",
+                                    buttons: {
+                                        confirm: {
+                                            className: "btn btn-success",
+                                        },
+                                    },
+                                });
+                                chargerUtilisateurs();
+                            } else {
+                                swal(`${rep.data.message}`, {
+                                    icon: "error",
+                                    buttons: {
+                                        confirm: {
+                                            className: "btn btn-success",
+                                        },
+                                    },
+                                });
+                                chargerUtilisateurs();
+                            }
+                        })
+
+                } else {
+                    swal.close();
+                }
+            });
+        }
+    }
+
+
+    const supprimerUtilisateur = (item) => {
+        if (item.statut_ut === "En ligne") {
+            swal("Desole ! L'utilisateur est en ligne pour le moment. Nous ne pouvons la supprimer", {
+                title: 'Interruption',
+                icon: "error",
+                buttons: {
+                    confirm: {
+                        className: "btn btn-success",
+                    },
+                },
+            });
+        } else {
+            swal({
+                title: "Etes-vous sur?",
+                text: "Une fois supprime, vous ne pourrez plus retourner en arriere !",
+                icon: "warning",
+                buttons: {
+                    confirm: {
+                        text: "Oui",
+                        className: "btn btn-success",
+                    },
+                    cancel: {
+                        text: "Non",
+                        visible: true,
+                        className: "btn btn-danger"
+                    }
+                },
+                // dangerMode: true,
+            }).then((willDelete) => {
+                if (willDelete) {
+                    // console.log(item._id)
+                    api.delete(`/utilisateur/delete/${item._id}`)
+                        .then((rep) => {
+                            if (rep.data.succes) {
+                                swal(`${rep.data.message}`, {
+                                    icon: "success",
+                                    buttons: {
+                                        confirm: {
+                                            className: "btn btn-success",
+                                        },
+                                    },
+                                });
+                                chargerUtilisateurs();
+                            } else {
+                                swal(`${rep.data.message}`, {
+                                    icon: "error",
+                                    buttons: {
+                                        confirm: {
+                                            className: "btn btn-success",
+                                        },
+                                    },
+                                });
+                                chargerUtilisateurs();
+                            }
+                        })
+
+                } else {
+                    swal.close();
+                }
+            });
+        }
+    }
 
     return (
         <div className="container">
@@ -203,7 +315,69 @@ function UtilisateurContent() {
 
 
                                 <div className="table-responsive">
-                                    <DataTable
+                                    <div className="col-md-12">
+                                        <div className="card card-round">
+
+                                            <div className="card-body p-0">
+                                                <div className="table-responsive">
+
+                                                    <table className="table align-items-center mb-0">
+                                                        <thead className="thead-light">
+                                                            <tr>
+                                                                {/* <th scope="col">Numero de paiement</th> */}
+                                                                <th scope="col" className="text-start">NOM UTILISATEUR</th>
+                                                                <th scope="col" className="text-start">EMAIL</th>
+                                                                <th scope="col" className="text-start">ROLE</th>
+                                                                <th scope="col" className="text-start">STATUT</th>
+                                                                <th scope="col" className="text-center">ACTIONS</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className='fw-bold'>
+
+                                                            {
+                                                                utilisateurData && utilisateurData.map(item => (
+                                                                    <tr key={item._id}>
+
+                                                                        <td className="text-start d-flex align-items-center">
+                                                                            <div className={item.statut_ut === "Online" ? "avatar avatar-online" : item.statut_ut === "Offline" ? "avatar avatar-offline" : "avatar avatar-away"}>
+                                                                                <span
+                                                                                    className="avatar-title rounded-circle border border-white"
+                                                                                ></span>
+                                                                            </div> &nbsp;&nbsp;
+                                                                            <div>
+                                                                                {item.nom_ut}
+                                                                            </div>
+
+                                                                        </td>
+
+                                                                        <td className="text-start">{item.email}</td>
+                                                                        <td className="text-start">
+                                                                            {item.role}
+                                                                        </td>
+                                                                        <td className="text-start">
+                                                                            {item.statut_ut}
+                                                                        </td>
+                                                                        <td className="text-center" style={{ fontSize: '20px' }}>
+                                                                            <i className="fas fa-eye-slash" style={{ cursor: 'pointer' }}
+                                                                                onClick={() => desactiverUtilisateur(item)}
+                                                                            ></i>
+                                                                            &nbsp;&nbsp;
+                                                                            <i className="fas fa-trash text-danger"
+                                                                                onClick={() => supprimerUtilisateur(item)}
+                                                                                style={{ cursor: 'pointer' }}
+                                                                            ></i>
+                                                                        </td>
+                                                                    </tr>
+                                                                ))
+                                                            }
+
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* <DataTable
                                         className="table table-hover"
                                         columns={colonne}
                                         data={utilisateurData}
@@ -250,7 +424,7 @@ function UtilisateurContent() {
                                                 },
                                             },
                                         }}
-                                    />
+                                    /> */}
                                 </div>
                             </div>
                         </div>

@@ -9,10 +9,11 @@ import SalleContent from './salle';
 import ExamenContent from './examen';
 import UtilisateurContent from './utilisateur';
 import PaiementContent from './paiement';
+import NotificationContent from './notification';
 
 function Home() {
 
-    const [isActive, setActive] = useState('');
+    const [isActive, setActive] = useState('dashboard');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const [currentPage, setCurrentPage] = useState("Tableau de bord");
@@ -23,6 +24,7 @@ function Home() {
 
     const menuClick = (menu, path) => {
         setActive(menu);
+        localStorage.setItem("menuActive", menu);
         setLoading(true);
         setCurrentPage(menu);
         setTimeout(() => {
@@ -63,6 +65,13 @@ function Home() {
                 <div className="sidebar-wrapper">
                     <div className="sidebar-content">
                         <ul className="nav nav-secondary">
+                            <li className="nav-section">
+                                <span className="sidebar-mini-icon">
+                                    <i className="fa fa-ellipsis-h"></i>
+                                </span>
+                                <h4 className="text-section">Accueil</h4>
+                            </li>
+
                             <li className={isActive === "Tableau de bord" ? "nav-item active" : "nav-item"} onClick={() => menuClick('Tableau de bord', '/app/tableau_de_bord')}>
                                 <Link to='#'
                                     // data-bs-toggle="collapse"
@@ -81,7 +90,7 @@ function Home() {
                                 <span className="sidebar-mini-icon">
                                     <i className="fa fa-ellipsis-h"></i>
                                 </span>
-                                <h4 className="text-section">Taches</h4>
+                                <h4 className="text-section">Gestion des Ressources</h4>
                             </li>
 
                             <li className={isActive === "Etudiant" ? "nav-item active" : "nav-item"} onClick={() => menuClick('Etudiant', '/app/etudiant')}>
@@ -140,6 +149,26 @@ function Home() {
                                 </Link>
                             </li>
 
+                            <li className="nav-section">
+                                <span className="sidebar-mini-icon">
+                                    <i className="fa fa-ellipsis-h"></i>
+                                </span>
+                                <h4 className="text-section">Autres</h4>
+                            </li>
+
+                            <li className={isActive === "Notification" ? "nav-item active" : "nav-item"} onClick={() => menuClick('Notification', '/app/notification')}>
+                                <Link
+                                    // data-bs-toggle="collapse"
+                                    // className="collapsed"
+                                    // aria-expanded="false"
+                                    style={{ cursor: 'pointer' }}
+                                >
+                                    <i className="fas fa-bell"></i>
+                                    <p>Notifications</p>
+                                    {/* <span className="caret"></span> */}
+                                </Link>
+                            </li>
+
                             <li className={isActive === "Utilisateur" ? "nav-item active" : "nav-item"} onClick={() => menuClick('Utilisateur', '/app/utilisateur')}>
                                 <Link
                                     // data-bs-toggle="collapse"
@@ -176,6 +205,7 @@ function Home() {
                     <Route path="examen" element={<ExamenContent />}></Route>
                     <Route path="utilisateur" element={<UtilisateurContent />}></Route>
                     <Route path="paiement" element={<PaiementContent />}></Route>
+                    <Route path="notification" element={<NotificationContent />}></Route>
                 </Routes>
                 <Footer />
             </div>

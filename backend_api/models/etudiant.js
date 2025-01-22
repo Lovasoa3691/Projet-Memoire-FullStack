@@ -10,7 +10,7 @@ const EtudiantSchema = new mongoose.Schema({
     mention: { type: String, required: true },
     niveau: { type: String, required: true },
     utilisateur: { type: mongoose.Schema.Types.ObjectId, ref: 'Utilisateurs' },
-    adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'Utilisateurs' },
+    adminId: { type: String, required: true },
 }, { timestamps: true });
 
 const etudiant = mongoose.model('etudiants', EtudiantSchema);

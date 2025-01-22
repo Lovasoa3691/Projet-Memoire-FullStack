@@ -8,111 +8,99 @@ const notificationEtu = require('../models/notificationEtudiant');
 const Counter = require('../models/counter');
 const historique = require('../models/historique');
 const { getNextSequenceValueHisto } = require('./historiqueController');
+const notificationAdmin = require('../models/notificationAdmin');
 
 async function CreerInscription(req, res) {
+
     try {
 
-        console.log('Donnees recus: ', req.body);
-        const { etudiantId, idExamen, dateExam } = req.body;
+        const { etudiantId, idExamen, dateExam, descriptionAttendus } = req.body;
 
-        if (!etudiantId || !idExamen || !dateExam) {
+        if (!etudiantId || !idExamen || !dateExam || descriptionAttendus.length === 0) {
             return res.json({
                 erreur: "Informations manquantes."
             });
         }
 
-        const dateExamen = new Date(dateExam);
-        const moisExam = dateExamen.getMonth();
-        const anneeExam = dateExamen.getFullYear();
+        const paiements = await paiement.find({ etudiantId: etudiantId });
 
+        const paiementEffectues = paiements.flatMap(p => p.descriptionPaie);
 
-        // Recuperation des paiements de l'etudiant pour tout les mois de l'examen
-        const paiemnts = await paiement.find({
-            etudiantId: etudiantId,
-            $or: [
-                { annee: { $lt: anneeExam } },
-                { annee: anneeExam, mois: { $lte: moisExam + 1 } },
-            ]
-        });
+        const paiementsManquantes = descriptionAttendus.filter(
+            desc => !paiementEffectues.includes(desc)
+        );
 
-        // Veifiction des mois payes
-        const moisPayes = paiemnts.map(p => `${p.mois}-${p.annee}`);
-        const moisrequis = [];
-        for (let i = moisExam; i >= 0; i--) {
-            moisrequis.push(`${new Date(anneeExam, i).toLocaleString('fr', { month: 'long' })}-${anneeExam}`);
-        }
+        if (paiementsManquantes.length === 0) {
 
-        const paiementsManquantes = moisrequis.filter(m => !moisPayes.includes(m));
+            const seqNumber = await getNextSequenceValue('notificationId');
+            const idNot = `NOT_${seqNumber.toString().padStart(2, '0')}`;
 
+            const inscriptionExistant = await inscription.findOne({
+                idExam: idExamen,
+            });
 
-        const seqNumber = await getNextSequenceValue('notificationId');
-        const idNot = `NOT_${seqNumber.toString().padStart(2, '0')}`;
+            if (inscriptionExistant) {
+                return res.json({
+                    message: "Desole! Vous etes deja inscrit a cet examen."
+                })
+            }
 
-        const inscriptionExistant = await inscription.findOne({
-            idExam: idExamen,
-        });
+            const exmInfo = await examen.findOne({ idExam: idExamen });
 
-        if (inscriptionExistant) {
-            return res.json({
-                message: "Desole! Vous etes deja inscrit a cet examen."
-            })
-        }
+            const incrip = new inscription({
+                etudiantMatricule: etudiantId,
+                idExam: idExamen,
+                statutIns: 'Valide'
+            });
 
-        const exmInfo = await examen.findOne({ idExam: idExamen });
+            await incrip.save();
 
-        const incrip = new inscription({
-            etudiantMatricule: etudiantId,
-            idExam: idExamen,
-            statutIns: 'Valide'
-        });
-
-        await incrip.save();
-
-        const newNotification = new notification({
-            idNot: idNot,
-            titre: `Inscription a la session d'examen ${exmInfo.codeExam}`,
-            objet: `Votre inscription a l'examen ${exmInfo.matiere} 
+            const newNotification = new notification({
+                idNot: idNot,
+                titre: `Nouveau utilisateur inscrit de la session ${exmInfo.codeExam}`,
+                objet: `Etudiant portant la matricule ${etudiantId} est inscrit sur l'examen ${exmInfo.matiere} 
             de la session ${exmInfo.codeExam} 
-            qui debutera le ${exmInfo.dateExam} est valide.`,
-            dateEnvoi: new Date()
-        })
+            qui debutera le ${exmInfo.dateExam}.`,
+                dateEnvoi: new Date()
+            })
 
-        await newNotification.save();
+            await newNotification.save();
 
-        const newNotificationEtudiant = new notificationEtu({
-            etuMatricule: etudiantId,
-            idNot: idNot,
-            dateRecept: new Date()
-        });
+            const newNotificationAdmin = new notificationAdmin({
+                idAdmin: exmInfo.adminId,
+                idNot: idNot,
+                dateRecept: new Date()
+            });
 
-        await newNotificationEtudiant.save();
+            await newNotificationAdmin.save();
 
-        // if (paiementsManquantes.length > 0) {
-        //     return res.json({
-        //         erreur: "Paiements incomplets",
-        //         paiementsManquantes
-        //     })
-        // }
+            const sqHistoNum = await getNextSequenceValueHisto('histoId');
+            const idHisto = `H_${sqHistoNum.toString().padStart(2, '0')}`;
 
-        const sqHistoNum = await getNextSequenceValueHisto('histoId');
-        const idHisto = `H_${sqHistoNum.toString().padStart(2, '0')}`;
+            const newhistorique = new historique({
+                etuMatricule: etudiantId,
+                dateHisto: new Date(),
+                idHisto: idHisto,
+                motifHisto: `Inscription a l'examen "${exmInfo.matiere}" de la session "${exmInfo.codeExam}"`,
+                statutHisto: "Valide"
+            });
 
-        const newhistorique = new historique({
-            etuMatricule: etudiantId,
-            dateHisto: new Date(),
-            idHisto: idHisto,
-            motifHisto: `Inscription a l'examen "${exmInfo.matiere}" de la session "${exmInfo.codeExam}"`,
-            statutHisto: "Valide"
-        });
+            await newhistorique.save();
 
-        await newhistorique.save();
+            return res.json({
+                succes: true,
+                message: "Inscription Valide.",
+            });
+        }
 
         return res.json({
-            succes: "Inscription reussie"
+            succes: false,
+            message: "Paiement incomplet.",
+            paiementsManquantes
         });
 
     } catch (error) {
-        console.log(error)
+        console.log(error.message)
         res.json({
             message: 'Erreur de server'
         });
@@ -145,6 +133,8 @@ async function getInscriptionValideCount(req, res) {
         }
 
         const matriculeEtu = etu.matricule;
+        const mention = etu.mention;
+        const niveau = etu.niveau;
 
         const inscriptionsValide1 = await inscription.find({
             etudiantMatricule: matriculeEtu,
@@ -158,13 +148,16 @@ async function getInscriptionValideCount(req, res) {
         }
 
         const examIds = inscriptionsValide1.map(insc => insc.idExam);
+        const classeValue = [`${mention} ${niveau}`]
 
         const InscriptionValide2 = await examen.find({
             idExam: { $in: examIds },
+            classe: { $in: classeValue },
             statut: 'En cours'
         });
 
         const examEnCoursCount = await examen.find({
+            classe: { $in: classeValue },
             statut: 'En cours'
         });
 
@@ -236,6 +229,37 @@ async function getInscriptionParEtudiant(req, res) {
     }
 }
 
+async function getInscription(req, res) {
+    try {
+
+        const { idExam } = req.params;
+
+        const inscriptions = await inscription.find({ idExam: idExam });
+
+        if (inscriptions.length === 0) {
+            return res.json({
+                message: "Aucun inscription trouve"
+            })
+        }
+
+        const etudiantMat = inscriptions.map(inscription => inscription.etudiantMatricule);
+
+        const etudiants = await etudiant.find({ matricule: { $in: etudiantMat } });
+
+        const resultats = etudiants.map(etu => {
+            return etu;
+        });
+
+        return res.json(resultats);
+
+    } catch (error) {
+        console.log(error);
+        return res.json({
+            message: "Erreur lors de la recuperation de l'inscription"
+        });
+    }
+}
+
 async function getInscriptionEnCoursParEtudiant(req, res) {
     try {
         const { email } = req.user;
@@ -275,13 +299,10 @@ async function getInscriptionEnCoursParEtudiant(req, res) {
             const [heureDebutHeure, heureDebutMinute] = exam.heureDebut.split(':');
             const [heureFinHeure, heureFinMinute] = exam.heureFin.split(':');
 
-
             examStart.setHours(heureDebutHeure, heureDebutMinute);
-
 
             const examEnd = new Date(examStart);
             examEnd.setHours(heureFinHeure, heureFinMinute);
-
 
             exam.examStart = examStart;
             exam.examEnd = examEnd;
@@ -340,10 +361,30 @@ async function supprimerInscription(req, res) {
     }
 }
 
+async function getAllInscriptions(req, res) {
+    try {
+        const inscriptionsCount = await inscription.find({ statutIns: 'Valide' });
+
+        if (!inscriptionsCount) {
+            return res.json({
+                message: "Aucun etudiant inscrit"
+            })
+        }
+
+        return res.json({
+            inscriptionCount: inscriptionsCount.length
+        })
+    } catch (error) {
+        console.log(error.message)
+    }
+}
+
 module.exports = {
     CreerInscription,
     getInscriptionEnCoursParEtudiant,
     getInscriptionParEtudiant,
     supprimerInscription,
-    getInscriptionValideCount
+    getInscriptionValideCount,
+    getInscription,
+    getAllInscriptions
 };

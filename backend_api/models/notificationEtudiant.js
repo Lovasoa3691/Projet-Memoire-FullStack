@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const NotificationEtuSchema = new mongoose.Schema({
     etuMatricule: { type: String },
     idNot: { type: String },
-    dateRecept: { type: Date, default: Date.now },
+    dateRecept: { type: Date },
     statutNot: { type: String, default: "Non lu" }
 });
 

@@ -102,54 +102,55 @@ function TopNavBar() {
                         </li>
 
 
-                        {user && user.nomUt ? (
-                            <li className="nav-item topbar-user dropdown hidden-caret">
-                                <a className="dropdown-toggle profile-pic" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <div className="avatar-sm">
-                                        <span
-                                            className="avatar-title rounded-circle border border-white"
-                                            style={{ backgroundColor: getColorForLetter(user.nomUt.charAt(0)) }}
-                                        >
-                                            {user.nomUt.charAt(0)}
+                        {
+                            user && user.nomUt ? (
+                                <li className="nav-item topbar-user dropdown hidden-caret">
+                                    <a className="dropdown-toggle profile-pic" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <div className="avatar-sm">
+                                            <span
+                                                className="avatar-title rounded-circle border border-white"
+                                                style={{ backgroundColor: getColorForLetter(user.nomUt.charAt(0)) }}
+                                            >
+                                                {user.nomUt.charAt(0)}
+                                            </span>
+                                        </div>
+                                        <span className="profile-username">
+                                            {/* <span className="op-7">Hi,</span> */}
+                                            <span className="fw-bold">{user.nomUt}</span>
                                         </span>
-                                    </div>
-                                    <span className="profile-username">
-                                        {/* <span className="op-7">Hi,</span> */}
-                                        <span className="fw-bold">{user.nomUt}</span>
-                                    </span>
-                                </a>
-                                <ul className="dropdown-menu dropdown-user animated fadeIn">
-                                    <div className="dropdown-user-scroll scrollbar-outer">
-                                        <li>
-                                            <div className="user-box">
-                                                <div className="avatar-lg">
-                                                    <span
-                                                        className="avatar-title rounded-circle border border-white"
-                                                        style={{ backgroundColor: getColorForLetter(user.nomUt.charAt(0)) }}
-                                                    >
-                                                        {user.nomUt.charAt(0)}
-                                                    </span>
+                                    </a>
+                                    <ul className="dropdown-menu dropdown-user animated fadeIn">
+                                        <div className="dropdown-user-scroll scrollbar-outer">
+                                            <li>
+                                                <div className="user-box">
+                                                    <div className="avatar-lg">
+                                                        <span
+                                                            className="avatar-title rounded-circle border border-white"
+                                                            style={{ backgroundColor: getColorForLetter(user.nomUt.charAt(0)) }}
+                                                        >
+                                                            {user.nomUt.charAt(0)}
+                                                        </span>
+                                                    </div>
+                                                    <div className="u-text">
+                                                        <h4>{user.nomUt}</h4>
+                                                        <p className="text-muted">{user.mail}</p>
+                                                        {/* <a className="btn btn-xs btn-secondary btn-sm">Voir Profile</a> */}
+                                                    </div>
                                                 </div>
-                                                <div className="u-text">
-                                                    <h4>{user.nomUt}</h4>
-                                                    <p className="text-muted">{user.mail}</p>
-                                                    {/* <a className="btn btn-xs btn-secondary btn-sm">Voir Profile</a> */}
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li>
-                                            {/* <div className="dropdown-divider"></div>
+                                            </li>
+                                            <li>
+                                                {/* <div className="dropdown-divider"></div>
                                         <a className="dropdown-item">Mon Profil</a> */}
 
-                                            <div className="dropdown-divider"></div>
-                                            <a className="dropdown-item" onClick={handleLogout}>Se Deconnecter</a>
-                                        </li>
-                                    </div>
-                                </ul>
-                            </li>
-                        ) : (
-                            <div></div>
-                        )}
+                                                <div className="dropdown-divider"></div>
+                                                <a className="dropdown-item" onClick={handleLogout}>Se Deconnecter</a>
+                                            </li>
+                                        </div>
+                                    </ul>
+                                </li>
+                            ) : (
+                                <div></div>
+                            )}
 
 
                     </ul>

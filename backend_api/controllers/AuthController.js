@@ -292,6 +292,62 @@ async function CreateSuperAdmin(req, res) {
     });
 }
 
+async function getAllUsers(req, res) {
+    const users = await utilisateurs.find();
+    if (users) {
+        return res.json({
+            users
+        })
+    }
+
+    return res.json({
+        message: "Aucun utilisateur non trouve"
+    })
+}
+
+async function disableAccountUser(req, res) {
+    const { id } = req.params;
+
+    const userUpdate = await utilisateurs.findByIdAndUpdate(
+        id,
+        { statut_ut: 'Desactive' }
+    )
+
+    if (userUpdate) {
+        return res.json({
+            succes: true,
+            message: 'Utilisateur desactive'
+        })
+    }
+
+    return res.json({
+        message: 'Utilisateur non trouve'
+    })
+}
+
+async function deleteUser(req, res) {
+    const { id } = req.params;
+
+    if (!id) {
+        return res.json({
+            message: "Identifiant manquant"
+        })
+    }
+
+    const userDelete = await Utilisateurs.findByIdAndDelete({ _id: id })
+
+    if (userDelete) {
+        return res.json({
+            succes: true,
+            message: 'Utilisateur supprime'
+        })
+    }
+
+    return res.json({
+        message: 'Utilisateur non trouve'
+    })
+}
+
 module.exports = {
     login,
     logout,
@@ -301,5 +357,8 @@ module.exports = {
     verifieToken,
     verifieRefreshToken,
     CreateSuperAdmin,
-    getNextSequenceValueAdmin
+    getNextSequenceValueAdmin,
+    getAllUsers,
+    disableAccountUser,
+    deleteUser
 };

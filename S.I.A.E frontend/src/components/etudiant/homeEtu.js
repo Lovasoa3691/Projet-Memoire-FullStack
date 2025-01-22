@@ -19,7 +19,7 @@ function Home() {
 
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const [currentPage, setCurrentPage] = useState("Tableau de bord");
+    const [currentPage, setCurrentPage] = useState();
     const [newNotification, setNewNotification] = useState(() => {
         return localStorage.getItem("countNotify") || '0';
     });

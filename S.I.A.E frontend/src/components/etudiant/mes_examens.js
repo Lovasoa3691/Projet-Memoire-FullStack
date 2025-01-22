@@ -7,43 +7,11 @@ function MyExamContent() {
 
     const [mesExamens, setMesExamens] = useState([]);
 
-    useEffect(() => {
-        chargerExamens();
-
-        const interval = setInterval(() => {
-            verifieEtatExamen();
-        }, 60000);
-
-        return () => clearInterval(interval);
-    }, []);
-
-    const chargerExamens = () => {
-
-        // const token = localStorage.getItem('token');
-        // if (token) {
-
-        api.get('/inscriptions')
-            .then((rep) => {
-                // console.log(rep.data);
-                // setMatriculeEtu(rep.data.etu['matricule']);
-                setMesExamens(rep.data);
-            })
-            .catch((error) => {
-                // localStorage.removeItem('token');
-                console.log("Erreur lors de la recuperation des donnees: ", error);
-            })
-
-        // axios.get('http://localhost:5000/api/inscriptions', {
-        //     headers: { Authorization: `Bearer ${token}` },
-        // })
-
-        // }
-    };
-
     const verifieEtatExamen = async () => {
-        await axios.get('/updateExamStatus')
+        await api.get('/updateExamStatus')
             .then((rep) => {
                 if (rep.data.succes) {
+                    console.log(rep.data.examMiseAJour)
                     const resultat = rep.data.examMiseAJour;
                     if (resultat.length > 0) {
                         chargerExamens();
@@ -57,6 +25,26 @@ function MyExamContent() {
             })
     }
 
+    useEffect(() => {
+        chargerExamens();
+        const interval = setInterval(() => {
+            verifieEtatExamen();
+        }, 60000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const chargerExamens = () => {
+        api.get('/inscriptions')
+            .then((rep) => {
+                // console.log(rep.data);
+                // setMatriculeEtu(rep.data.etu['matricule']);
+                setMesExamens(rep.data);
+            })
+            .catch((error) => {
+                // localStorage.removeItem('token');
+                console.log("Erreur lors de la recuperation des donnees: ", error);
+            })
+    };
 
     const formatDate = (dateExam) => {
         const current = new Date(dateExam);
@@ -67,18 +55,12 @@ function MyExamContent() {
         return `${year}/${month}/${day}`;
     };
 
-    // const currentDateTime = getCurrentDateTime();
-
-    // const [IdExam, setIdExam] = useState('');
-
     const handleDeleteExam = async (idInscription, event) => {
 
         const row = event.target.closest("tr")
         // setIdExam(row.getAttribute('data-key'));
         const cells = row.querySelectorAll("td")
         const statut = cells[5].textContent;
-
-        // console.log(idExam);
 
         if (statut === "En cours") {
             swal("Desole ! Vous ne pouvez pas supprimer un examen en cours!", {

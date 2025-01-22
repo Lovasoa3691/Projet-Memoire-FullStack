@@ -1,6 +1,6 @@
 const express = require('express');
 
-const { login, logout, inscription, getUtilisateur, verifieToken, verifieRefreshToken, CreateSuperAdmin } = require('../controllers/AuthController');
+const { login, logout, inscription, getUtilisateur, verifieToken, verifieRefreshToken, CreateSuperAdmin, getAllUsers, disableAccountUser, deleteUser } = require('../controllers/AuthController');
 
 const router = express.Router();
 
@@ -11,6 +11,12 @@ router.post('/logout', logout);
 router.post('/inscription', inscription);
 
 router.get('/utilisateur', verifieToken, getUtilisateur);
+
+router.get('/utilisateur/all', verifieToken, getAllUsers);
+
+router.put('/utilisateur/update/:id', verifieToken, disableAccountUser);
+
+router.delete('/utilisateur/delete/:id', verifieToken, deleteUser);
 
 router.post('/refresh-token', verifieRefreshToken);
 

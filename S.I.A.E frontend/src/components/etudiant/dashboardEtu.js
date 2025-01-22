@@ -158,7 +158,7 @@ const Dashboard = () => {
         try {
             api.get('/examen/count')
                 .then((rep) => {
-                    // console.log(rep.data);
+                    console.log(rep.data);
                     setNbExamEnCours(rep.data.examEnCoursCount);
                     setNbInscription(rep.data.nbInscriptionValide)
                 })
@@ -329,7 +329,7 @@ const Dashboard = () => {
                                         height="15"
                                         alt=""
                                     />
-                                    <h2 className="py-4 mb-0">Sceance Suivante <strong>[{mat}]</strong></h2>
+                                    <h2 className="py-4 mb-0">Examen suivant <strong>[{mat}]</strong></h2>
                                     <div className="row">
                                         <div className="col-8 pe-0">
                                             <h3 className="fw-bold mb-1">dans</h3>
@@ -437,14 +437,14 @@ const Dashboard = () => {
                                                             <th scope="col">HORAIRE</th>
                                                         </tr>
                                                     </thead>
-                                                    <tbody>
+                                                    <tbody className="fw-bold">
                                                         {
                                                             prochaineExam && prochaineExam.map((ex, index) => (
                                                                 <tr key={index} data-key={ex.idExam} className="text-center">
                                                                     <td>{ex.codeExam}</td>
                                                                     <td>{formatDate2(ex.dateExam)}</td>
                                                                     <td>{ex.matiere}</td>
-                                                                    <td>{ex.heureDebut} - {ex.heureFin}</td>
+                                                                    <td>{ex.heureDebut} a {ex.heureFin}</td>
                                                                 </tr>
                                                             ))
                                                         }

@@ -169,7 +169,7 @@ function PaiementContent() {
                                 <div className="d-flex align-items-center">
                                     {/* <h4 className="card-title">Add Row</h4> */}
                                     <button
-                                        className="btn btn-primary btn-round ms-auto"
+                                        className="btn btn-primary btn-round btn-border ms-auto"
                                         onClick={openModal}
                                     >
                                         <i className="fa fa-plus">&nbsp;&nbsp;</i>
@@ -352,7 +352,7 @@ function PaiementContent() {
                                                             <th scope="col" className="text-end">Date et Heure</th>
                                                             <th scope="col" className="text-end">Montant Total</th>
                                                             <th scope="col" className="text-end">Status</th>
-                                                            <th scope="col" className="text-end">Action</th>
+                                                            <th scope="col" className="text-center">Action</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -373,7 +373,7 @@ function PaiementContent() {
                                                                     <td className="text-end">
                                                                         <span className="badge badge-success">Complet</span>
                                                                     </td>
-                                                                    <td className="text-end">
+                                                                    <td className="text-center">
                                                                         <i className="fas fa-archive fa-2x"></i>
                                                                     </td>
                                                                 </tr>

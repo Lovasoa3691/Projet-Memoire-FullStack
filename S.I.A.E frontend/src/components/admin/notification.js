@@ -4,11 +4,7 @@ import swal from 'sweetalert';
 import api from '../API/api';
 import Swal from 'sweetalert2';
 
-
 function NotificationContent() {
-
-
-
     const formatDate = (dateReception) => {
         const current = new Date(dateReception);
         const year = current.getFullYear();
@@ -19,7 +15,6 @@ function NotificationContent() {
 
         return `${year}/${month}/${day} ${hours}:${minutes}`;
     };
-
 
     const [notifications, setNotifications] = useState([]);
 
@@ -34,7 +29,6 @@ function NotificationContent() {
         else if ("YZ".includes(firstLetter)) { return 'yellow'; }
         else {
             return 'black';
-
         }
     }
 
@@ -48,31 +42,13 @@ function NotificationContent() {
     }, []);
 
     const chargerNotifications = () => {
-        api.get('/notifications')
+        api.get('/notifications/admin')
             .then((rep) => {
-                // console.log(rep.data);
-                // console.log(rep.data);
                 setNotifications(rep.data);
             })
     }
 
     const showNotificationDetails = (notification) => {
-        // swal({
-        //     title: `${nom}`,
-        //     text: `${notification.notificationOriginal.titre}\n\n\n Objet\n
-        //     ${notification.notificationOriginal.objet}
-        //     \n\n${notification.ma_notification.dateRecept}`,
-
-        //     buttons: {
-        //         confirm: {
-        //             text: "Fermer",
-        //             value: true,
-        //             visible: true,
-        //             className: "btn btn-primary",
-        //             closeModal: true
-        //         }
-        //     }
-        // });
         localStorage.setItem('countNotify', '0');
 
         Swal.fire({
@@ -100,7 +76,7 @@ function NotificationContent() {
 
     const updateNotificationStatut = async (idNot) => {
         try {
-            const rep = await api.put(`/notificationEtu/${idNot}`)
+            const rep = await api.put(`/notification/admin/${idNot}`)
 
             if (rep.data.succes) {
                 console.log("Succes")
@@ -131,7 +107,7 @@ function NotificationContent() {
             // dangerMode: true,
         }).then((willDelete) => {
             if (willDelete) {
-                api.delete(`/notification/${idNot}`)
+                api.delete(`/notification/admin/${idNot}`)
                     .then((rep) => {
                         if (rep.data.succes) {
                             swal(`${rep.data.message}`, {
@@ -163,16 +139,16 @@ function NotificationContent() {
         });
     }
 
-    const nom = "INSITUT DE FORMATION TECHNIQUE";
+    const nom = "Systeme";
 
 
 
     return (
         <div className="container">
             <div className="page-inner">
-                <div className="page-header">
+                {/* <div className="page-header">
                     <h3 className="fw-bold mb-3">Tous mes notifications</h3>
-                </div>
+                </div> */}
                 <div className="col-md-12">
                     <div className="card">
                         <div className="card-header">
@@ -182,6 +158,7 @@ function NotificationContent() {
                             </div>
                         </div>
                         <div className="card-body">
+
                             {
 
                                 notifications && notifications.length > 0 ? (

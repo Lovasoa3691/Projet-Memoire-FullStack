@@ -85,23 +85,21 @@ function HistoriqueContent() {
     }, []);
 
     return (
+
         <div className="container">
             <div className="page-inner">
-                <h3 className='fw-bold mb-3'>Historiques des inscriptions</h3>
-            </div>
-
-            <div className="row">
+                <div className="page-header">
+                    <h3 className="fw-bold mb-3">Historiques des inscriptions</h3>
+                </div>
                 <div className="col-md-12">
                     <div className="card">
                         <div className="card-header">
-                            <div className="card-head-row card-tools-still-right">
-                                <div className="card-title">Historiques de mes incriptions</div>
-
+                            <div className="card-head-row">
+                                <div className="card-title">Liste des historiques</div>
                             </div>
                         </div>
                         <div className="card-body">
-                            <ol className="activity-feed">
-
+                            <ol >
                                 {
                                     histoData && histoData.map((data) => (
                                         <li key={data.idHisto}
@@ -133,7 +131,8 @@ function HistoriqueContent() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
+
     );
 }
 
