@@ -29,9 +29,14 @@ function Register() {
 
     const handleRegistering = (e) => {
         e.preventDefault();
+        const formatPrenom = prenom
+            .toUpperCase()
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
 
         axios.post('http://localhost:5000/api/inscription',
-            { nom: nom, prenom: prenom, nomUt: nomUt, email: email, mdp: mdp }
+            { nom: nom.toUpperCase(), prenom: formatPrenom, nomUt: nomUt, email: email, mdp: mdp }
         )
             .then((rep) => {
                 if (rep.data.message === "sucess") {
@@ -94,7 +99,9 @@ function Register() {
                 <div className="uf-form-signin">
                     <div className="text-center">
                         <img src="" alt="" width="100" height="100" />
+
                         <h1 className="text-white h3">Registration</h1>
+                        <h5 className="text-white">Fournir votre nom et prenoms exacte s'il vous plait!</h5>
                     </div>
                     <form className="mt-4" onSubmit={handleRegistering}>
                         <div className="row">
@@ -141,7 +148,7 @@ function Register() {
 
                         <div className="mt-4 text-center">
                             <span className="text-white">Deja membre? &nbsp; &nbsp;</span>
-                            <Link onClick={() => changeUrl('/')}>Se connecter</Link>
+                            <Link onClick={() => changeUrl('/')} className="text-primary">Se connecter</Link>
                         </div>
                     </form>
                 </div>

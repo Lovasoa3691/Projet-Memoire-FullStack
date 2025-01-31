@@ -7,6 +7,9 @@ import { saveAs } from 'file-saver';
 import api from '../API/api';
 import swal from 'sweetalert';
 import Select from 'react-select';
+import html2pdf from 'html2pdf.js';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 function StudentContent() {
 
@@ -358,6 +361,47 @@ function StudentContent() {
         setBtnLabel('Enregistrer');
     }
 
+    const tableRef = useRef(null);
+
+    const ImprimerEtudiants = () => {
+        const table = tableRef.current;
+
+        const options = {
+            margin: 5,
+            filename: 'liste.pdf',
+            html2canvas: { scale: 2 },
+            jsPDF: { orientation: "portrait" },
+        };
+
+        html2pdf().set(options).from(table).save();
+    }
+
+    const ImprimerEtudiantsPDF = () => {
+        const doc = new jsPDF();
+        const colonnes = ["MATRICULE", "NOM", "PRENOM"];
+        const ligne = donneeFiltre.map((ligne) => [ligne.matricule, ligne.nomEtu, ligne.prenomEtu]);
+
+        if (selectedMention && selectedNiveau) {
+            doc.text(`Liste des etudiants ${selectedMention.value} ${selectedNiveau.value}`, 15, 10);
+            doc.autoTable({
+                head: [colonnes],
+                body: ligne,
+                startY: 20,
+            });
+
+            doc.save(`${selectedMention.value}_${selectedNiveau.value}.pdf`);
+        } else {
+            doc.text(`Liste des etudiants`, 15, 10);
+            doc.autoTable({
+                head: [colonnes],
+                body: ligne,
+                startY: 20,
+            });
+
+            doc.save(`liste_etudiant.pdf`);
+        }
+    }
+
 
     return (
         <div className="container">
@@ -374,7 +418,9 @@ function StudentContent() {
                             <div className="card-header">
                                 <div className="d-flex align-items-center">
                                     <div className="card-tools d-flex align-items-center">
-                                        <div className="btn btn-label-info btn-round btn-sm">
+                                        <div className="btn btn-label-info btn-round btn-sm"
+                                            onClick={ImprimerEtudiantsPDF}
+                                        >
                                             <span className="btn-label">
                                                 <i className="fa fa-print"></i>
                                             </span> &nbsp;
@@ -585,6 +631,7 @@ function StudentContent() {
 
 
                                 <div className="table-responsive">
+
                                     <DataTable
                                         className="table table-hover"
                                         columns={colonne}
@@ -595,7 +642,7 @@ function StudentContent() {
                                         // striped
                                         subHeader
                                         subHeaderComponent={
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 
                                                 <Select
                                                     options={mentionOptions}
@@ -614,7 +661,7 @@ function StudentContent() {
                                                     isClearable
                                                 />
 
-                                                {/* <button onClick={filteredData} className='btn btn-primary'>Filtrer</button> */}
+
                                             </div>
                                         }
 

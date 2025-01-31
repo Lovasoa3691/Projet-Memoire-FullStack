@@ -4,6 +4,7 @@ import axios from "axios";
 import swal from "sweetalert";
 import { UserContext } from "../../App";
 import api from "../API/api";
+import exam from '../../assets/img/3.png';
 
 function Login() {
 
@@ -117,8 +118,8 @@ function Login() {
             <div className="login">
                 <div className="uf-form-signin">
                     <div className="text-center">
-                        <img src="./assets/img/logo-fb.png" alt="" width="100" height="100" />
-                        <h1 className="text-white h3">Connexion</h1>
+                        <img src={exam} alt="" width="250" height="250" />
+                        {/* <h1 className="text-white h3">Connectez-vous</h1> */}
                     </div>
                     <form className="mt-4" onSubmit={handleConnecting}>
                         <div className="input-group uf-input-group input-group-lg mb-3">
@@ -134,7 +135,7 @@ function Login() {
                                 <input type="checkbox" className="form-check-input uf-form-check-input" id="exampleCheck1" />
                                 <label className="form-check-label text-white" >Se souvenir de moi</label>
                             </div>
-                            <a>Mot de passe oublie?</a>
+                            {/* <a>Mot de passe oublie?</a> */}
                         </div>
                         <div className="d-grid mb-4">
                             <button type="submit" className="btn uf-btn-primary btn-lg">Connecter</button>
@@ -151,7 +152,7 @@ function Login() {
                         </div> */}
                         <div className="mt-4 text-center">
                             <span className="text-white">Vous n'a pas encore un compte? &nbsp; &nbsp;</span>
-                            <Link onClick={() => changeUrl('register')}>S'inscrire</Link>
+                            <Link onClick={() => changeUrl('register')} className="text-primary">S'inscrire</Link>
                         </div>
                     </form>
                 </div>

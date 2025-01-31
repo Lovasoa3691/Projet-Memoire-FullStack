@@ -25,7 +25,10 @@ function Home() {
     });
 
     useEffect(() => {
-        document.title = `${currentPage} - Mon Application`;
+        document.title = `${currentPage}`;
+    })
+
+    useEffect(() => {
         const interval = setInterval(() => {
             actualiseNotification();
         }, 5000);

@@ -61,8 +61,10 @@ function ExamenContent() {
         try {
             NProgress.start();
 
-            const descriptionAttendus = codeExam === "S1" || codeExam === "S3" || codeExam === "S5" || codeExam === "S7" || codeExam === "S9" ?
-                ["FF1", "FF2", "FF3", "FF4"] : codeExam === "S2" || codeExam === "S4" || codeExam === "S6" || codeExam === "S8" || codeExam === "S10" ?
+            const descriptionAttendus = codeExam === "S1" || codeExam === "S3" ||
+                codeExam === "S5" || codeExam === "S7" || codeExam === "S9" ?
+                ["FF1", "FF2", "FF3", "FF4"] : codeExam === "S2" || codeExam === "S4"
+                    || codeExam === "S6" || codeExam === "S8" || codeExam === "S10" ?
                     ["FF5", "FF6", "FF7", "FF8"] : [];
 
             setDescriptionsAttendusData(descriptionAttendus);

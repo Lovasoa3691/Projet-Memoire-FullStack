@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import Select from 'react-select';
 import axios from 'axios';
 import api from '../API/api';
+import swal from 'sweetalert';
 
 function PaiementContent() {
 
@@ -19,6 +20,10 @@ function PaiementContent() {
 
     const [total, setTotal] = useState(0);
 
+    const [selectedEtudiant, setSelectedEtudiant] = useState(null);
+
+    const [showModa, setShowModal] = useState(false);
+
     useEffect(() => {
         chargerPaiements();
     }, []);
@@ -28,10 +33,7 @@ function PaiementContent() {
         chargerEtudiants();
     }, []);
 
-    useEffect(() => {
-        const total = paieData.reduce((acc, paieemt) => acc + paieemt.montant, 0);
-        setTotal(total);
-    }, [paieData]);
+
 
     const formatDate = (dateHisto) => {
         const current = new Date(dateHisto);
@@ -56,16 +58,56 @@ function PaiementContent() {
             })
     };
 
+
     const chargerPaiements = () => {
         api.get('/paiements')
             .then((rep) => {
 
-                setpaieData(rep.data.paiements)
+                const uniquePaiements = rep.data.paiements.reduce((acc, paiement) => {
+                    const etudiant = acc.find(p => p.etudiantId === paiement.etudiantId);
+                    if (etudiant) {
+                        etudiant.montantTotal += Number(paiement.montant);
+                    } else {
+                        acc.push({
+                            etudiantId: paiement.etudiantId,
+                            datePaie: paiement.datePaie,
+                            montantTotal: Number(paiement.montant)
+                        });
+                    }
+                    return acc;
+                }, []);
+
+
+                setpaieData(uniquePaiements);
+
+
+                const total = uniquePaiements.reduce((sum, etudiant) => sum + etudiant.montantTotal, 0);
+                setTotal(total);
             })
             .catch((error) => {
-                console.log(error.message)
+                console.log(error.message);
+            });
+    };
+
+    const afficherDetails = (etudiantId) => {
+
+        api.get('/paiements')
+            .then((rep) => {
+                const details = rep.data.paiements.filter(paiement => paiement.etudiantId === etudiantId);
+                setSelectedEtudiant(details);
+                setShowModal(true);
+                // console.log(details)
             })
-    }
+            .catch((error) => {
+                console.log(error.message);
+            });
+    };
+
+    const fermerModal = () => {
+        setShowModal(false);
+        setSelectedEtudiant([]);
+    };
+
 
     const generateMentions = (categories, levels) => {
         return categories.flatMap(category =>
@@ -143,7 +185,16 @@ function PaiementContent() {
         try {
             api.post('/paiements/save', paiementForm)
                 .then((rep) => {
-                    console.log(rep.data.message)
+                    // console.log(rep.data.message)
+                    setVisible(false)
+                    swal({
+                        text: `${rep.data.message}`,
+                        icon: "success",
+                        buttons: false,
+                        timer: 1500
+                    },
+                    )
+                    chargerPaiements();
                 })
                 .catch((err) => {
                     console.log(err.message)
@@ -369,17 +420,16 @@ function PaiementContent() {
                                                                         Paiement de la part de l'etudiant {item.etudiantId}
                                                                     </th>
                                                                     <td className="text-end">{formatDate(item.datePaie)}</td>
-                                                                    <td className="text-end">{total} Ariary</td>
+                                                                    <td className="text-end">{item.montantTotal} Ariary</td>
                                                                     <td className="text-end">
                                                                         <span className="badge badge-success">Complet</span>
                                                                     </td>
                                                                     <td className="text-center">
-                                                                        <i className="fas fa-archive fa-2x"></i>
+                                                                        <i className="fas fa-archive fa-2x" title='Voir details' onClick={() => afficherDetails(item.etudiantId)}></i>
                                                                     </td>
                                                                 </tr>
                                                             ))
                                                         }
-
 
                                                     </tbody>
                                                 </table>
@@ -387,55 +437,82 @@ function PaiementContent() {
                                         </div>
                                     </div>
                                 </div>
-                                {/* <DataTable
-                                        className="table table-hover"
-                                        columns={colonne}
-                                        data={paieData}
-                                        pagination
-                                        highlightOnHover
-                                        // striped
-                                        subHeader
-                                        subHeaderComponent={
-                                            <input
-                                                type='text'
-                                                placeholder='Recherche'
-                                                value={search}
-                                                onChange={(e) => setSearch(e.target.value)}
 
-                                                style={{
-                                                    padding: '10px',
-                                                    width: '300px',
-                                                    fontSize: '16px',
-                                                    border: '1px solid #ddd',
-                                                }}
-                                            />
-                                        }
 
-                                        customStyles={{
-                                            rows: {
-                                                style: {
-                                                    backgroundColor: '#f8f9fa',
-                                                    '&:nth-of-type(odd)': {
-                                                        backgroundColor: '#e9ecef'
-                                                    },
-                                                }
-                                            },
-                                            headCells: {
-                                                style: {
-                                                    backgroundColor: '#343a40',
-                                                    color: '#ffffff',
-                                                    fontWeight: 'bold',
-                                                    textAlign: 'center'
-                                                },
-                                            },
-                                            cells: {
-                                                style: {
-                                                    textAlign: 'center',
-                                                },
-                                            },
-                                        }}
-                                    /> */}
-                                {/* </div> */}
+                                {
+                                    showModa && (
+                                        <div
+                                            className="modal fade show d-block"
+                                            role="dialog"
+                                        >
+
+                                            <div className="modal-dialog modal-lg ">
+                                                <div className="modal-content">
+
+
+                                                    <div className="modal-header">
+                                                        <h4 className="modal-title">Details du paiement pour l'etudiant {selectedEtudiant[0].etudiantId}</h4>
+                                                        <button type="button" className="btn-close" onClick={fermerModal} ></button>
+                                                    </div>
+
+
+                                                    <div className="modal-body">
+                                                        <table className="table align-items-center mb-0">
+                                                            <thead className="thead-light">
+                                                                <tr>
+                                                                    {/* <th scope="col">Numero de paiement</th> */}
+                                                                    <th scope="col" className="text-start">Date paiement</th>
+                                                                    <th scope="col" className="text-start">Descriptions</th>
+                                                                    <th scope="col" className="text-start">Montant</th>
+                                                                    <th scope="col" className="text-start">Statut</th>
+
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className='fw-bold'>
+
+                                                                {
+                                                                    selectedEtudiant && selectedEtudiant.map(item => (
+                                                                        <tr key={item.idPaie}>
+                                                                            <td className="text-start">
+                                                                                {item.datePaie}
+                                                                            </td>
+                                                                            <td className="text-start">
+                                                                                {item.descriptionPaie.join(', ')}
+                                                                            </td>
+                                                                            <td className="text-start">
+                                                                                {item.montant}
+                                                                            </td>
+                                                                            <td className="text-start">
+                                                                                {item.statutPaie}
+                                                                            </td>
+                                                                        </tr>
+                                                                    ))
+                                                                }
+
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+
+
+                                                    <div className="modal-footer">
+                                                        <button type="button" className="btn btn-danger"
+                                                            onClick={fermerModal}
+                                                        >Fermer</button>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    )
+                                }
+
+                                {
+                                    showModa && (
+                                        <div className="modal-backdrop fade show"></div>
+                                    )
+                                }
+
                             </div>
                         </div>
                     </div>

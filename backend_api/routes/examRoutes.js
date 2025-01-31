@@ -7,7 +7,9 @@ const { getExamen,
     supprimeExamen,
     CreerExamen,
     getExamenCount,
-    getAllExamEnCoursCount } = require('../controllers/ExamenController');
+    getAllExamEnCoursCount,
+    getAllExamEnCours,
+    annuleExamen } = require('../controllers/ExamenController');
 
 const { authentificate, verifieToken } = require('../controllers/AuthController')
 
@@ -28,6 +30,8 @@ router.get('/examens', verifieToken, getExamen);
 router.get('/examens/all/count', verifieToken, getExamenCount);
 
 router.get('/examens/encours/count', verifieToken, getAllExamEnCoursCount);
+
+router.get('/examens/encours', verifieToken, getAllExamEnCours);
 
 router.post('/examens/save', verifieToken, CreerExamen)
 
@@ -52,6 +56,8 @@ router.get('/inscriptions/etudiants/all', verifieToken, getAllInscriptions);
 router.delete('/inscription/:idInscription', supprimerInscription);
 
 router.delete('/examens/delete/:idExam', supprimeExamen);
+
+router.put('/examens/update/statut/:idExam', annuleExamen);
 
 // router.get('/utilisateur', getUtilisateur);
 

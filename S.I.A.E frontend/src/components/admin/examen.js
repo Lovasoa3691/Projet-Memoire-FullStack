@@ -19,23 +19,13 @@ function ExamenContent() {
             sortable: true,
         },
         {
-            name: "CODE EXAMEN",
+            name: "SESSION",
             selector: row => row.codeExam,
             sortable: true,
         },
         {
-            name: "DATE EXAMEN",
+            name: "DATE",
             selector: row => row.dateExam,
-            sortable: true,
-        },
-        {
-            name: "DEBUT",
-            selector: row => row.heureDebut,
-            sortable: true,
-        },
-        {
-            name: "FIN",
-            selector: row => row.heureFin,
             sortable: true,
         },
         {
@@ -44,19 +34,23 @@ function ExamenContent() {
             sortable: true,
         },
         {
-            name: "DUREE",
-            selector: row => row.duree,
+            name: "HORAIRE",
+            selector: row => (
+                <span className='text-center'>{row.heureDebut} - {row.heureFin}</span>
+            ),
             sortable: true,
         },
         {
             name: "CLASSE",
-            selector: row => row.classe,
+            selector: row => (
+                <span>[ {row.classe.join(", ")} ]</span>
+            ),
             sortable: true,
         },
         {
             name: "STATUT",
             selector: row => (
-                <span className={row.statut === "En cours" ? "badge badge-warning" : "badge badge-primary"}>
+                <span className={row.statut === "En cours" ? "badge badge-warning" : row.statut === "Termine" ? "badge badge-primary" : "badge badge-danger"}>
                     {row.statut}
                 </span>
             ),
@@ -66,17 +60,29 @@ function ExamenContent() {
             name: "ACTIONS",
             cell: (row) => (
                 <div className="form-button-action" style={{ fontWeight: 'normal', fontSize: '20px' }}>
+
                     <i className="fas fa-file-alt text-primary"
                         onClick={() => afficherListeEtudiantInscrit(row)}
+                        title="Inscriptions"
                     ></i>
                     &nbsp;&nbsp;&nbsp;
-                    <i className="fas fa-edit"
+                    <i className="fas fa-pen"
                         onClick={() => openModalEdit(row)}
+                        title="Editer"
                     ></i>
                     &nbsp;&nbsp;
                     <i className="fas fa-trash-alt text-danger"
                         onClick={() => supprimeExamen(row)}
+                        title="Supprimer"
                     ></i>
+                    &nbsp;&nbsp;
+
+                    {row.statut === 'En cours' && (
+                        <i className="fas fa-times-circle text-warning"
+                            onClick={() => annulerExamen(row)}
+                            title="Annuler"
+                        ></i>
+                    )}
                 </div>
             )
         },
@@ -155,7 +161,7 @@ function ExamenContent() {
         // console.log(examenForm)
         api.post('/examens/save', examenForm)
             .then((rep) => {
-                console.log(rep.data)
+                // console.log(rep.data)
                 if (rep.data.succes) {
                     setVisible(false)
                     swal({
@@ -185,7 +191,7 @@ function ExamenContent() {
 
     const updateSalle = (e) => {
         e.preventDefault();
-        api.put(`/salles/update/${examenForm.idExam}`, examenForm)
+        api.put(`/examens/update/${examenForm.idExam}`, examenForm)
             .then((rep) => {
                 if (rep.data.succes) {
                     swal({
@@ -210,6 +216,59 @@ function ExamenContent() {
             .catch((err) => {
                 console.log("Erreur: ", err.message)
             })
+    }
+
+    const annulerExamen = (data) => {
+
+        swal({
+            title: "Annulation",
+            text: "Vous etes sur de vouloir annule cet examen ?",
+            icon: "warning",
+            buttons: {
+                confirm: {
+                    text: "Oui",
+                    className: "btn btn-success",
+                },
+                cancel: {
+                    text: "Non",
+                    visible: true,
+                    className: "btn btn-danger"
+                }
+            },
+            // dangerMode: true,
+        }).then((willDelete) => {
+            if (willDelete) {
+                api.put(`/examens/update/statut/${data.idExam}`)
+                    .then((rep) => {
+                        if (rep.data.succes) {
+                            swal({
+                                text: `${rep.data.message}`,
+                                icon: "success",
+                                buttons: false,
+                                timer: 1500
+                            },
+                            )
+                        }
+                        else {
+                            swal({
+                                text: `${rep.data.message}`,
+                                icon: "error",
+                                buttons: false,
+                                timer: 1500
+                            },
+                            )
+                        }
+                        chargerExamens();
+                    })
+                    .catch((err) => {
+                        console.log("Erreur: ", err.message)
+                    })
+
+            } else {
+                swal.close();
+            }
+        });
+
     }
 
     const supprimeExamen = (data) => {

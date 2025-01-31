@@ -137,7 +137,81 @@ async function getAllExamEnCoursCount(req, res) {
             });
         }
 
-        return res.json({ examCount: examens.length, examTermine: examensTermine.length });
+        const examensAnnule = await examen.find({ adminId: utilisateur.id_ut, statut: 'Annule' });
+        if (!examensAnnule) {
+            return res.json({
+                error: "Aucun information trouve"
+            });
+        }
+
+        return res.json({
+            examCount: examens.length,
+            examTermine: examensTermine.length,
+            examAnnule: examensAnnule.length
+        });
+    } catch (error) {
+        return res.json({ erreur: "Erreur lors de la recuperation." });
+    }
+
+}
+
+
+async function getAllExamEnCours(req, res) {
+
+    const { email } = req.user;
+
+    try {
+
+        const utilisateur = await Utilisateurs.findOne({ email: email });
+
+        if (!utilisateur) {
+            return res.json({
+                erreur: "Utilisateur non trouve"
+            });
+        }
+
+        const examens = await examen.find({ adminId: utilisateur.id_ut, statut: 'En cours' }).limit(6);
+        if (!examens) {
+            return res.json({
+                error: "Aucun information trouve"
+            });
+        }
+
+        const resultats = await Promise.all(
+            examens.map(async (examen) => {
+                const inscriptions = await inscription.find({ idExam: { $in: examen.idExam }, statutIns: 'Valide' });
+
+                const matriculeEtu = inscriptions.map(mat => mat.etudiantMatricule);
+
+                const infoEtudiant = await etudiant.find({ matricule: { $in: matriculeEtu } });
+
+                return {
+                    examen,
+                    infoEtudiant
+                };
+            })
+        )
+
+        res.json(resultats);
+
+        // const idExamens = examens.map(exam => exam.idExam);
+
+        // const inscriptions = await inscription.find({ idExam: { $in: idExamens } });
+
+        // const matriculeEtu = inscriptions.map(mat => mat.etudiantMatricule);
+
+        // const infoEtudiant = await etudiant.find({ matricule: { $in: matriculeEtu } });
+
+        // const resultats = examens.map(exam => {
+        //     const inscriptionAssocie = inscriptions.find(ins => ins.idExam === exam.idExam);
+        //     return {
+        //         mon_examen: exam,
+        //         mon_inscription: inscriptionAssocie
+        //     };
+        // });
+
+
+        // return res.json({ examens: examens, infoEtudiant });
     } catch (error) {
         return res.json({ erreur: "Erreur lors de la recuperation." });
     }
@@ -330,28 +404,28 @@ async function CreerExamen(req, res) {
         const etuMatricule = users.map(user => (user.id_ut));
         const etuMail = users.map(user => (user.email));
 
-        // console.log(etuMatricule)
+        console.log(etuMail)
 
         // Envoi notification par mail
-        // const transporter = nodemailer.createTransport({
-        //     service: 'gmail',
-        //     auth: {
-        //         user: '',
-        //         pass: ''
-        //     }
-        // });
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'lovaniainasarahandrianarisoa@gmail.com',
+                pass: 'xsgh bsrp xukf klti'
+            }
+        });
 
-        // for (const email of etuMail){
-        //     await transporter.sendMail({
-        //         from: '"Institut de Formation Technique" <email>',
-        //         to: email,
-        //         subject: "Preparez-vous pour les nouvelles sessions d'examen.",
-        //         text: `Chers etudiants,\n 
-        //             De nouvelles sessions d'examen ont ete ouvertes! 
-        //             C'est l'occasion ideale de demontrer vos competences et de valider vos acquis. 
-        //             Consultez votre espace etudiant des maintenant pour plus de details.`,
-        //     });
-        // }
+        for (const email of etuMail) {
+            await transporter.sendMail({
+                from: '"Institut de Formation Technique" <lovaniainasarahandrianarisoa@gmail.com>',
+                to: email,
+                subject: "Preparez-vous pour les nouvelles sessions d'examen.",
+                text: `Chers etudiants,\n 
+                    De nouvelles sessions d'examen ont ete ouvertes! 
+                    C'est l'occasion ideale de demontrer vos competences et de valider vos acquis. 
+                    Consultez votre espace etudiant des maintenant pour plus de details.`,
+            });
+        }
 
         if (etuMatricule.length === 0) {
             return res.json({
@@ -433,6 +507,42 @@ async function supprimeExamen(req, res) {
     }
 }
 
+async function annuleExamen(req, res) {
+
+    try {
+        const { idExam } = req.params;
+
+        if (!idExam) {
+            return res.json({
+                message: "Examen non trouve"
+            })
+        }
+
+        const examenCible = await examen.findOneAndUpdate(
+            { idExam: idExam },
+            { $set: { statut: "Annule" } }
+        );
+        // const inscriptionCible = await inscription.findOneAndDelete({ idExam: idExam });
+
+        if (!examenCible) {
+            return res.json({
+                message: "Examen non trouve"
+            })
+        }
+
+        return res.json({
+            succes: true,
+            message: "Examen est annule"
+        })
+    } catch (error) {
+        console.log(error.message)
+        return res.json({
+            succes: false,
+            message: "Erreur lors de l'annulation de l'examen"
+        })
+    }
+}
+
 async function getExamenCount(req, res) {
     try {
         const examCount = await examen.countDocuments();
@@ -452,6 +562,8 @@ module.exports = {
     CreerExamen,
     supprimeExamen,
     getExamenCount,
-    getAllExamEnCoursCount
+    getAllExamEnCoursCount,
+    getAllExamEnCours,
+    annuleExamen
 };
 

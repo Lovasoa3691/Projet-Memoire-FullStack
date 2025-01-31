@@ -81,7 +81,7 @@ async function getDistictPaiement(req, res) {
 }
 
 async function getAllPaiement(req, res) {
-    const paiements = await paiement.find({ etudiantId: 'E1151' })
+    const paiements = await paiement.find()
 
     return res.json({
         paiements

@@ -8,9 +8,8 @@ import { Route, Routes, Link, useNavigate } from "react-router-dom";
 import SalleContent from './salle';
 import ExamenContent from './examen';
 import UtilisateurContent from './utilisateur';
-import PaiementContent from './paiement';
+// import PaiementContent from './paiement';
 import NotificationContent from './notification';
-import { FaBars } from "react-icons/fa";
 
 function Home() {
 
@@ -68,7 +67,7 @@ function Home() {
                                     <h4 className="text-section">Accueil</h4>
                                 </li>
 
-                                <li className={isActive === "Tableau de bord" ? "nav-item active" : "nav-item"} onClick={() => menuClick('Tableau de bord', '/app/tableau_de_bord')}>
+                                <li className={isActive === "Tableau de bord" ? "nav-item active" : "nav-item"} onClick={() => menuClick('Tableau de bord', '/exam-eazy-app/tableau_de_bord')}>
                                     <Link to='#'
                                         // data-bs-toggle="collapse"
                                         // className="collapsed"
@@ -86,10 +85,10 @@ function Home() {
                                     <span className="sidebar-mini-icon">
                                         <i className="fa fa-ellipsis-h"></i>
                                     </span>
-                                    <h4 className="text-section">Gestion des Ressources</h4>
+                                    <h4 className="text-section">Ressources</h4>
                                 </li>
 
-                                <li className={isActive === "Etudiant" ? "nav-item active" : "nav-item"} onClick={() => menuClick('Etudiant', '/app/etudiant')}>
+                                <li className={isActive === "Etudiant" ? "nav-item active" : "nav-item"} onClick={() => menuClick('Etudiant', '/exam-eazy-app/etudiant')}>
                                     <Link to='#'
                                         // data-bs-toggle="collapse"
                                         // className="collapsed"
@@ -104,7 +103,7 @@ function Home() {
 
                                 </li>
 
-                                <li className={isActive === "Examen" ? "nav-item active" : "nav-item"} onClick={() => menuClick('Examen', '/app/examen')}>
+                                <li className={isActive === "Examen" ? "nav-item active" : "nav-item"} onClick={() => menuClick('Examen', '/exam-eazy-app/examen')}>
                                     <Link
                                         // data-bs-toggle="collapse"
                                         // className="collapsed"
@@ -118,7 +117,7 @@ function Home() {
                                     </Link>
                                 </li>
 
-                                <li className={isActive === "Salle d'examen" ? "nav-item active" : "nav-item"} onClick={() => menuClick("Salle d'examen", '/app/salle')}>
+                                <li className={isActive === "Salle d'examen" ? "nav-item active" : "nav-item"} onClick={() => menuClick("Salle d'examen", '/exam-eazy-app/salle')}>
                                     <Link
                                         // data-bs-toggle="collapse"
                                         // className="collapsed"
@@ -132,19 +131,6 @@ function Home() {
 
                                 </li>
 
-                                <li className={isActive === "Paiement" ? "nav-item active" : "nav-item"} onClick={() => menuClick('Paiement', '/app/paiement')}>
-                                    <Link
-                                        // data-bs-toggle="collapse"
-                                        // className="collapsed"
-                                        // aria-expanded="false"
-                                        style={{ cursor: 'pointer' }}
-                                    >
-                                        <i className="fas fa-dollar-sign"></i>
-                                        <p>Paiements</p>
-
-                                    </Link>
-                                </li>
-
                                 <li className="nav-section">
                                     <span className="sidebar-mini-icon">
                                         <i className="fa fa-ellipsis-h"></i>
@@ -152,7 +138,7 @@ function Home() {
                                     <h4 className="text-section">Autres</h4>
                                 </li>
 
-                                <li className={isActive === "Notification" ? "nav-item active" : "nav-item"} onClick={() => menuClick('Notification', '/app/notification')}>
+                                <li className={isActive === "Notification" ? "nav-item active" : "nav-item"} onClick={() => menuClick('Notification', '/exam-eazy-app/notification')}>
                                     <Link
                                         // data-bs-toggle="collapse"
                                         // className="collapsed"
@@ -165,7 +151,7 @@ function Home() {
                                     </Link>
                                 </li>
 
-                                <li className={isActive === "Utilisateur" ? "nav-item active" : "nav-item"} onClick={() => menuClick('Utilisateur', '/app/utilisateur')}>
+                                <li className={isActive === "Utilisateur" ? "nav-item active" : "nav-item"} onClick={() => menuClick('Utilisateur', '/exam-eazy-app/utilisateur')}>
                                     <Link
                                         // data-bs-toggle="collapse"
                                         // className="collapsed"
@@ -202,7 +188,7 @@ function Home() {
                     <Route path="salle" element={<SalleContent />}></Route>
                     <Route path="examen" element={<ExamenContent />}></Route>
                     <Route path="utilisateur" element={<UtilisateurContent />}></Route>
-                    <Route path="paiement" element={<PaiementContent />}></Route>
+                    {/* <Route path="paiement" element={<PaiementContent />}></Route> */}
                     <Route path="notification" element={<NotificationContent />}></Route>
                 </Routes>
                 <Footer />

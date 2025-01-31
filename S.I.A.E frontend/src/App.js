@@ -11,9 +11,11 @@ import Login from './components/auth/login';
 import Register from './components/auth/register';
 import HomeAdmin from './components/admin/home';
 import HomeEtudiant from './components/etudiant/homeEtu';
+import HomeSA from './components/super-admin/homeSA';
 import { BrowserRouter as Router, Route, Routes, useNavigate, Navigate } from 'react-router-dom';
 import React, { createContext, useContext, useEffect, useState } from "react";
 import api from './components/API/api';
+import ProtectRoute from './components/ProtectRoute';
 export const UserContext = createContext();
 
 function App() {
@@ -77,42 +79,28 @@ function App() {
       })
   }, []);
 
-  const RouteProteger = ({ children, role }) => {
-    const { user } = useContext(UserContext);
-
-    if (user === undefined) {
-      return <div>Chergement...</div>;
-    }
-
-    if (!user) {
-      return <Navigate to="/" replace />;
-    }
-
-    if (user.role !== role) {
-      return <Navigate to="/" replace />;
-    }
-
-    return children;
-  };
-
   return (
     <UserContext.Provider value={{ user, setUser }}>
       <div className="App">
-
         <Router>
           <Routes>
             <Route path='/' element={<Login />}></Route>
             <Route path='/register' element={<Register />}></Route>
             <Route path='/app/*' element={
-              <RouteProteger role="Admin">
+              <ProtectRoute role="Admin">
                 <HomeAdmin />
-              </RouteProteger>
+              </ProtectRoute>
             } />
             <Route path='/etudiant/*' element={
-              <RouteProteger role="Etudiant">
+              <ProtectRoute role="Etudiant">
                 <HomeEtudiant />
-              </RouteProteger>
+              </ProtectRoute>
             } />
+            {/* <Route path='/exam-eazy-app/*' element={
+              <RouteProteger role="SuperAdmin">
+                <HomeSA />
+              </RouteProteger>
+            } /> */}
           </Routes>
         </Router>
       </div>

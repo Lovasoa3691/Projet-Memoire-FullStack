@@ -94,12 +94,45 @@ function HistoriqueContent() {
                 <div className="col-md-12">
                     <div className="card">
                         <div className="card-header">
-                            <div className="card-head-row">
-                                <div className="card-title">Liste des historiques</div>
+                            <div className="card-head-row card-tools-still-right">
+                                <div className="card-title">Activites recentes</div>
                             </div>
                         </div>
+
                         <div className="card-body">
-                            <ol >
+
+                            <ol class="activity-feed" style={{ padding: '20px' }}>
+                                {
+                                    histoData && histoData.length > 0 ? (
+                                        histoData.map((data) => (
+                                            <li class="feed-item feed-item-secondary">
+                                                <time className="date" >{formatDate(data.dateHisto)}</time>
+                                                <span className="text fw-bold text-md"
+                                                > {data.motifHisto} </span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+                                                {
+                                                    data.statutHisto === "Valide" ? (
+                                                        <span className="badge badge-success fw-bold">{data.statutHisto}</span>
+                                                    ) : data.statutHisto === "En attente" ? (
+                                                        <span className="badge badge-warning fw-bold">{data.statutHisto}</span>
+                                                    ) : (
+                                                        <span className="badge badge-danger fw-bold">{data.statutHisto}</span>
+                                                    )
+                                                }
+
+                                                <div className='float-end pt-1'>
+                                                    <i className='fa fa-times text-danger' onClick={() => deleteHistorique(data.idHisto)} style={{ cursor: 'pointer', fontSize: '20px' }}></i>
+                                                </div>
+                                            </li>
+                                        ))
+                                    ) : (
+                                        <div className="text-center">Aucun historique pour le moment</div>
+                                    )
+                                }
+
+                            </ol>
+
+                            {/* <ol >
                                 {
                                     histoData && histoData.map((data) => (
                                         <li key={data.idHisto}
@@ -126,7 +159,7 @@ function HistoriqueContent() {
                                     ))
                                 }
 
-                            </ol>
+                            </ol> */}
                         </div>
                     </div>
                 </div>

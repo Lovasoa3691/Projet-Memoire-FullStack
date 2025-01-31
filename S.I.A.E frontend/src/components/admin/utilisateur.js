@@ -54,7 +54,19 @@ function UtilisateurContent() {
     const [filtre, setFiltre] = useState([]);
     const [utilisateurData, setutilisateurData] = useState([]);
 
-
+    const getColorForLetter = (letter) => {
+        const firstLetter = letter.toUpperCase();
+        if ("ABCD".includes(firstLetter)) { return 'blue'; }
+        else if ("EFGH".includes(firstLetter)) { return 'red'; }
+        else if ("IJKL".includes(firstLetter)) { return 'green'; }
+        else if ("MNOP".includes(firstLetter)) { return 'purple'; }
+        else if ("QRST".includes(firstLetter)) { return 'orange'; }
+        else if ("UVWX".includes(firstLetter)) { return 'pink'; }
+        else if ("YZ".includes(firstLetter)) { return 'yellow'; }
+        else {
+            return 'black';
+        }
+    }
 
     useEffect(() => {
         chargerUtilisateurs();
@@ -342,7 +354,8 @@ function UtilisateurContent() {
                                                                             <div className={item.statut_ut === "Online" ? "avatar avatar-online" : item.statut_ut === "Offline" ? "avatar avatar-offline" : "avatar avatar-away"}>
                                                                                 <span
                                                                                     className="avatar-title rounded-circle border border-white"
-                                                                                ></span>
+                                                                                    style={{ backgroundColor: getColorForLetter(item.nom_ut.charAt(0)) }}
+                                                                                >{item.nom_ut.charAt(0)}</span>
                                                                             </div> &nbsp;&nbsp;
                                                                             <div>
                                                                                 {item.nom_ut}
