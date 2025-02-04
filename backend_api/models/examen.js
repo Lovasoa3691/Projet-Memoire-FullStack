@@ -10,8 +10,9 @@ const ExamenSchema = new mongoose.Schema({
     matiere: { type: String, required: true },
     duree: { type: String, required: true },
     statut: { type: String, required: true, default: "En cours" },
-    adminId: { type: String, required: true },
+    secretaireId: { type: String, required: true },
     salleExam: { type: String, required: true },
+    idAnnee: { type: String, reuired: true },
 }, { timestamps: true });
 
 const examen = mongoose.model('examens', ExamenSchema);

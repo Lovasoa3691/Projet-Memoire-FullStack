@@ -10,6 +10,7 @@ const PaiementSchema = new mongoose.Schema({
     statutPaie: { type: String, required: true },
     modePaie: { type: String, required: true },
     etudiantId: { type: String, required: true },
+    idAnnee: { type: String, reuired: true },
 });
 
 const paiement = mongoose.model('paiements', PaiementSchema);

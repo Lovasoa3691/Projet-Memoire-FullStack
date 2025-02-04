@@ -1,3 +1,4 @@
+const annee = require("../models/anneeUniversitaire");
 const salle = require("../models/salle");
 const salleCounter = require("../models/salleCounter");
 const utilisateurs = require("../models/utilisateurs");
@@ -15,7 +16,9 @@ async function getAllSalle(req, res) {
             })
         }
 
-        const salles = await salle.find();
+        const anneeActive = await annee.findOne({ statutAnnee: 'Active' })
+
+        const salles = await salle.find({ idAnnee: anneeActive.idAnnee });
 
         return res.json({
             succes: true,
@@ -46,12 +49,15 @@ async function AjouterSalle(req, res) {
         })
     }
 
+    const anneeActive = await annee.findOne({ statutAnnee: 'Active' })
+
     const salleExistant = await salle.findOne({ numSalle: numSalle });
 
     if (salleExistant) {
 
         salleExistant.capacite = capacite
         salleExistant.localisation = localisation
+        // salleExistant.idAnnee = anneeActive.idAnnee
         salleExistant.updateOne();
 
         return res.json({
@@ -66,7 +72,8 @@ async function AjouterSalle(req, res) {
         idSalle: idSalle,
         numSalle: numSalle,
         capacite: capacite,
-        localisation: localisation
+        localisation: localisation,
+        idAnnee: anneeActive.idAnnee
     })
 
     await nouveauSalle.save();

@@ -2,9 +2,10 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const Utilisateurs = require('../models/utilisateurs');
 const etudiant = require('../models/etudiant');
-const administration = require('../models/administration');
+const administration = require('../models/administrateur');
 const utilisateurs = require('../models/utilisateurs');
 const adminCounter = require('../models/adminCounter');
+const secretaire = require('../models/secretaire')
 
 const secretKey = process.env.SECRET_KEY || "mySecretKey3691";
 const refreshKey = process.env.REFRESH_SECRET_KEY || "mySecretKey3691_refresh";
@@ -292,8 +293,45 @@ async function CreateSuperAdmin(req, res) {
     });
 }
 
+async function CreateAdminGestion(req, res) {
+
+    const { nomUt, nomSec, prenomsec, email, mdp } = req.body;
+
+    const sqAdminValue = await getNextSequenceValueAdmin('adminId');
+    const idSec = `SC${sqAdminValue.toString().padStart(2, '0')}`;
+
+    const newSec = new secretaire({
+        idSec: idSec,
+        nomSec: nomSec,
+        prenomSec: prenomsec
+    });
+
+    await newSec.save();
+
+    const hashedPassword = await bcrypt.hash(mdp, 10);
+
+    const infoUtilisateur = new utilisateurs({
+        id_ut: newSec.idSec,
+        nom_ut: nomUt,
+        email: email,
+        mdp: hashedPassword,
+        role: 'Secretaire',
+        statut_ut: 'Active'
+    });
+
+    await infoUtilisateur.save();
+
+    return res.json({
+        succes: true,
+        message: 'Utilisateur cree avec succes'
+    });
+}
+
 async function getAllUsers(req, res) {
-    const users = await utilisateurs.find();
+
+    const { email } = req.user;
+
+    const users = await utilisateurs.find({ email: { $ne: email } });
     if (users) {
         return res.json({
             users
@@ -360,5 +398,6 @@ module.exports = {
     getNextSequenceValueAdmin,
     getAllUsers,
     disableAccountUser,
-    deleteUser
+    deleteUser,
+    CreateAdminGestion
 };

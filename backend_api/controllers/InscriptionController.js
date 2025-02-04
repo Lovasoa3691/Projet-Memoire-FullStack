@@ -9,6 +9,7 @@ const Counter = require('../models/counter');
 const historique = require('../models/historique');
 const { getNextSequenceValueHisto } = require('./historiqueController');
 const notificationAdmin = require('../models/notificationAdmin');
+const annee = require('../models/anneeUniversitaire');
 
 async function CreerInscription(req, res) {
 
@@ -21,8 +22,9 @@ async function CreerInscription(req, res) {
                 erreur: "Informations manquantes."
             });
         }
+        const anneeActive = await annee.findOne({ statutAnnee: 'Active' })
 
-        const paiements = await paiement.find({ etudiantId: etudiantId });
+        const paiements = await paiement.find({ etudiantId: etudiantId, idAnnee: anneeActive.idAnnee });
 
         const paiementEffectues = paiements.flatMap(p => p.descriptionPaie);
 
@@ -404,7 +406,35 @@ async function getAllInscriptions(req, res) {
     try {
         // const inscriptionsCount = await inscription.find({ statutIns: 'Valide' });
 
-        const inscriptionsCount = await inscription.distinct('etudiantMatricule', { statutIns: 'Valide' });
+        const anneeActive = await annee.findOne({ statutAnnee: 'Active' })
+
+        if (!anneeActive || anneeActive.length === 0) {
+            return res.json({ message: "Aucune année universitaire active trouvée" });
+        }
+
+        const activeYearIds = anneeActive.idAnnee;
+
+
+        const activeStudents = await etudiant.find({ idAnnee: activeYearIds });
+
+
+        const activeExams = await examen.find({ idAnnee: activeYearIds });
+
+
+        if (activeStudents.length === 0 || activeExams.length === 0) {
+            return res.json({ inscriptionCount: 0 });
+        }
+
+        const activeStudentMatricules = activeStudents.map(student => student.matricule);
+        const activeExamIds = activeExams.map(exam => exam.idExam);
+
+        const inscriptionsCount = await inscription.distinct('etudiantMatricule',
+            {
+                statutIns: 'Valide',
+                etudiantMatricule: { $in: activeStudentMatricules },
+                idExam: { $in: activeExamIds }
+            }
+        );
 
         if (!inscriptionsCount) {
             return res.json({

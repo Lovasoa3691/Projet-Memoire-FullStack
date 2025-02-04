@@ -1,12 +1,14 @@
 const express = require('express')
 const { verifieToken } = require('../controllers/AuthController');
-const { CreerPaiement, getAllPaiement, getDistictPaiement } = require('../controllers/PaiementController');
+const { CreerPaiement, getAllPaiement, getDistictPaiement, verifierPaiementEtudiant } = require('../controllers/PaiementController');
 
 const router = express.Router();
 
 router.get('/paiements', verifieToken, getAllPaiement);
 
 router.get('/paiements/distinct', verifieToken, getDistictPaiement);
+
+router.get('/paiements/verification', verifieToken, verifierPaiementEtudiant);
 
 router.post('/paiements/save', CreerPaiement);
 

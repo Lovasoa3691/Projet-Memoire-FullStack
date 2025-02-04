@@ -5,7 +5,7 @@ const { verifieToken } = require('../controllers/AuthController');
 
 const router = express.Router();
 
-router.post('/etudiants/save', AjouterEtudiant);
+router.post('/etudiants/save', verifieToken, AjouterEtudiant);
 
 router.delete('/etudiants/delete/:matricule', supprimerEtudiant);
 

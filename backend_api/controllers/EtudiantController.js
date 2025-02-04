@@ -1,3 +1,4 @@
+const annee = require("../models/anneeUniversitaire");
 const etudiant = require("../models/etudiant");
 const etudiantCounter = require("../models/etudiantCounter");
 const salle = require("../models/salle");
@@ -17,7 +18,9 @@ async function getAllEtudiant(req, res) {
             })
         }
 
-        const etudiants = await etudiant.find();
+        const anneeActive = await annee.findOne({ statutAnnee: 'Active' });
+
+        const etudiants = await etudiant.find({ idAnnee: anneeActive.idAnnee });
 
         return res.json({
             succes: true,
@@ -40,7 +43,11 @@ async function getNextSequenceValueEtudiant(seq) {
 
 
 async function AjouterEtudiant(req, res) {
+
+    const { email } = req.user;
+
     try {
+
         const { nomEtu, prenomEtu, adresseEtu, contactEtu, mention, niveau } = req.body;
 
         if (!nomEtu || !prenomEtu || !adresseEtu || !contactEtu || !mention || !niveau) {
@@ -48,6 +55,18 @@ async function AjouterEtudiant(req, res) {
                 message: "Informations manquantes"
             })
         }
+
+        const existantEtudiant = await etudiant.findOne({ nomEtu: nomEtu, prenomEtu: prenomEtu });
+
+        if (existantEtudiant) {
+            return res.json({
+                message: "Cet etudiant existe deja dans le systeme!"
+            })
+        }
+
+        const utilisateur = await utilisateurs.findOne({ email: email });
+
+        const anneeActive = await annee.findOne({ statutAnnee: 'Active' })
 
         const seqNumber = await getNextSequenceValueEtudiant('etudiantId');
         const matricule = `E${seqNumber.toString()}`;
@@ -59,7 +78,9 @@ async function AjouterEtudiant(req, res) {
             adresseEtu: adresseEtu,
             contactEtu: `(+261)${contactEtu}`,
             mention: mention,
-            niveau: niveau
+            niveau: niveau,
+            SecreataireId: utilisateur.id_ut,
+            idAnnee: anneeActive.idAnnee
         })
 
         await nouveauEtudiant.save();
@@ -69,6 +90,7 @@ async function AjouterEtudiant(req, res) {
             message: "Nouveau ligne a ete ajoute avec succes"
         });
     } catch (error) {
+        console.log(error)
         return res.json({
             succes: false,
             message: "Une erreur est survenue lors d'enregistrement de donnee"
@@ -155,24 +177,27 @@ async function supprimerEtudiant(req, res) {
 
 async function getEtudiantCount(req, res) {
     try {
+
+        const anneeActive = await annee.findOne({ statutAnnee: 'Active' });
+
         const InfoCount = await etudiant.find({
-            mention: "INFO"
+            mention: 'INFO', idAnnee: anneeActive.idAnnee
         })
 
         const BtpCount = await etudiant.find({
-            mention: "BTP"
+            mention: 'BTP', idAnnee: anneeActive.idAnnee
         })
 
         const DroitCount = await etudiant.find({
-            mention: "DROIT"
+            mention: 'DROIT', idAnnee: anneeActive.idAnnee
         })
 
         const GmCount = await etudiant.find({
-            mention: "GM"
+            mention: 'GM', idAnnee: anneeActive.idAnnee
         })
 
         const IcjCount = await etudiant.find({
-            mention: "ICJ"
+            mention: 'ICJ', idAnnee: anneeActive.idAnnee
         })
 
         return res.json({

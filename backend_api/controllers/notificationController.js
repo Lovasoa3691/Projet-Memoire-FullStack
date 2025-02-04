@@ -261,7 +261,7 @@ async function getNotificationCount(req, res) {
             })
         }
 
-        const count = await notificationEtu.countDocuments({ statutNot: 'Non lu' });
+        const count = await notificationEtu.countDocuments({ etuMatricule: matriculeEtu, statutNot: 'Non lu' });
 
 
         return res.json({ count });

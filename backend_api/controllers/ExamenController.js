@@ -8,6 +8,7 @@ const notification = require('../models/notification');
 const notificationEtu = require('../models/notificationEtudiant');
 const nodemailer = require('nodemailer');
 const counter = require('../models/counter');
+const annee = require('../models/anneeUniversitaire');
 
 async function getExamen(req, res) {
 
@@ -30,10 +31,11 @@ async function getExamen(req, res) {
             });
         }
 
+        const anneeActive = await annee.findOne({ statutAnnee: 'Active' })
 
         const classe = new RegExp(`${etu.mention} ${etu.niveau}`, 'i');
 
-        const examens = await examen.find({ classe: classe, statut: 'En cours' });
+        const examens = await examen.find({ classe: classe, statut: 'En cours', idAnnee: anneeActive.idAnnee });
         if (!examens) {
             return res.json({
                 error: "Aucun information trouve"
@@ -42,16 +44,14 @@ async function getExamen(req, res) {
 
         const examId = examens.map(id => id.idExam);
 
-        const inscriptionAssocie = await inscription.find({ idExam: { $in: examId } });
+        const inscriptionAssocie = await inscription.find({ idExam: { $in: examId }, etudiantMatricule: etu.matricule });
 
         const examensAvecDates = examens.map(exam => {
             const examStart = new Date(exam.dateExam);
             const [heureDebutHeure, heureDebutMinute] = exam.heureDebut.split(':');
             const [heureFinHeure, heureFinMinute] = exam.heureFin.split(':');
 
-
             examStart.setHours(heureDebutHeure, heureDebutMinute);
-
 
             const examEnd = new Date(examStart);
             examEnd.setHours(heureFinHeure, heureFinMinute);
@@ -93,8 +93,9 @@ async function getExamEnCoursCount(req, res) {
             });
         }
 
+        const anneeActive = await annee.findOne({ statutAnnee: 'Active' })
 
-        const examens = await examen.find({ statut: 'En cours' });
+        const examens = await examen.find({ statut: 'En cours', idAnnee: anneeActive.idAnnee });
         if (!examens) {
             return res.json({
                 error: "Aucun information trouve"
@@ -123,21 +124,52 @@ async function getAllExamEnCoursCount(req, res) {
             });
         }
 
-        const examens = await examen.find({ adminId: utilisateur.id_ut, statut: 'En cours' });
+        const anneeActive = await annee.findOne({ statutAnnee: 'Active' })
+
+        if (utilisateur.role === "Admin") {
+            const examens = await examen.find({ statut: 'En cours', idAnnee: anneeActive.idAnnee });
+            if (!examens) {
+                return res.json({
+                    error: "Aucun information trouve"
+                });
+            }
+
+            const examensTermine = await examen.find({ statut: 'Termine', idAnnee: anneeActive.idAnnee });
+            if (!examensTermine) {
+                return res.json({
+                    error: "Aucun information trouve"
+                });
+            }
+
+            const examensAnnule = await examen.find({ statut: 'Annule', idAnnee: anneeActive.idAnnee });
+            if (!examensAnnule) {
+                return res.json({
+                    error: "Aucun information trouve"
+                });
+            }
+
+            return res.json({
+                examCount: examens.length,
+                examTermine: examensTermine.length,
+                examAnnule: examensAnnule.length
+            });
+        }
+
+        const examens = await examen.find({ secretaireId: utilisateur.id_ut, statut: 'En cours', idAnnee: anneeActive.idAnnee });
         if (!examens) {
             return res.json({
                 error: "Aucun information trouve"
             });
         }
 
-        const examensTermine = await examen.find({ adminId: utilisateur.id_ut, statut: 'Termine' });
+        const examensTermine = await examen.find({ secretaireId: utilisateur.id_ut, statut: 'Termine', idAnnee: anneeActive.idAnnee });
         if (!examensTermine) {
             return res.json({
                 error: "Aucun information trouve"
             });
         }
 
-        const examensAnnule = await examen.find({ adminId: utilisateur.id_ut, statut: 'Annule' });
+        const examensAnnule = await examen.find({ secretaireId: utilisateur.id_ut, statut: 'Annule', idAnnee: anneeActive.idAnnee });
         if (!examensAnnule) {
             return res.json({
                 error: "Aucun information trouve"
@@ -170,7 +202,35 @@ async function getAllExamEnCours(req, res) {
             });
         }
 
-        const examens = await examen.find({ adminId: utilisateur.id_ut, statut: 'En cours' }).limit(6);
+        const anneeActive = await annee.findOne({ statutAnnee: 'Active' });
+
+        if (utilisateur.role === "Admin") {
+            const examens = await examen.find({ statut: 'En cours', idAnnee: anneeActive.idAnnee }).limit(6);
+            if (!examens) {
+                return res.json({
+                    error: "Aucun information trouve"
+                });
+            }
+
+            const resultats = await Promise.all(
+                examens.map(async (examen) => {
+                    const inscriptions = await inscription.find({ idExam: { $in: examen.idExam }, statutIns: 'Valide' });
+
+                    const matriculeEtu = inscriptions.map(mat => mat.etudiantMatricule);
+
+                    const infoEtudiant = await etudiant.find({ matricule: { $in: matriculeEtu } });
+
+                    return {
+                        examen,
+                        infoEtudiant
+                    };
+                })
+            )
+
+            return res.json(resultats);
+        }
+
+        const examens = await examen.find({ secretaireId: utilisateur.id_ut, statut: 'En cours', idAnnee: anneeActive.idAnnee }).limit(6);
         if (!examens) {
             return res.json({
                 error: "Aucun information trouve"
@@ -192,7 +252,7 @@ async function getAllExamEnCours(req, res) {
             })
         )
 
-        res.json(resultats);
+        return res.json(resultats);
 
         // const idExamens = examens.map(exam => exam.idExam);
 
@@ -223,7 +283,9 @@ async function mettreAjourStatutExam(req, res) {
     try {
         const now = new Date();
 
-        const exams = await examen.find({ dateExam: { $gte: new Date().setHours(0, 0, 0, 0) } });
+        const anneeActive = await annee.findOne({ statutAnnee: 'Active' })
+
+        const exams = await examen.find({ dateExam: { $gte: new Date().setHours(0, 0, 0, 0) }, idAnnee: anneeActive.idAnnee });
 
         const AJour = await Promise.all(
             exams.map(async (exam) => {
@@ -277,7 +339,23 @@ async function getAllExamens(req, res) {
             });
         }
 
-        const examens = await examen.find({ adminId: utilisateur.id_ut }).sort({ dateExam: -1 });
+        const anneeActive = await annee.findOne({ statutAnnee: 'Active' });
+        const idAnnee = anneeActive.idAnnee;
+
+        if (utilisateur.role === "Admin") {
+            const examens = await examen.find({ idAnnee: idAnnee }).sort({ dateExam: -1 });
+            if (!examens) {
+                return res.json({
+                    error: "Aucun information trouve"
+                });
+            }
+
+            return res.json({
+                examens
+            });
+        }
+
+        const examens = await examen.find({ secretaireId: utilisateur.id_ut, idAnnee: idAnnee }).sort({ dateExam: -1 });
         if (!examens) {
             return res.json({
                 error: "Aucun information trouve"
@@ -309,6 +387,7 @@ async function getNextSequenceValue(seq) {
 async function CreerExamen(req, res) {
 
     try {
+
         const { email } = req.user;
         const { codeExam, dateExam, heureDebut, heureFin, matiere, duree, classe, salleExam } = req.body;
 
@@ -337,6 +416,8 @@ async function CreerExamen(req, res) {
                 }
             )
         }
+
+        const anneeActive = await annee.findOne({ statutAnnee: 'Active' })
 
         const idAdmin = utilisateur.id_ut;
         // const hDeb = new Date(`2000-01-01T${heureDebut}:00Z`);
@@ -375,7 +456,8 @@ async function CreerExamen(req, res) {
             classe,
             salleExam,
             duree,
-            adminId: idAdmin,
+            secretaireId: idAdmin,
+            idAnnee: anneeActive.idAnnee
         })
         await newExam.save();
 
@@ -387,7 +469,7 @@ async function CreerExamen(req, res) {
 
         const etudiantsList = await Promise.all(
             mentionsNiveaux.map(async ({ mention, niveau }) => {
-                return await etudiant.find({ mention, niveau });
+                return await etudiant.find({ mention, niveau, idAnnee: anneeActive.idAnnee });
             })
         )
 
@@ -427,11 +509,11 @@ async function CreerExamen(req, res) {
             });
         }
 
-        if (etuMatricule.length === 0) {
-            return res.json({
-                message: "Etudiant Inconnu"
-            })
-        }
+        // if (etuMatricule.length === 0) {
+        //     return res.json({
+        //         message: "Etudiant Inconnu"
+        //     })
+        // }
 
         // Envoi notification via systeme
         const seqNumberNot = await getNextSequenceValue('notificationId');
@@ -545,9 +627,12 @@ async function annuleExamen(req, res) {
 
 async function getExamenCount(req, res) {
     try {
-        const examCount = await examen.countDocuments();
 
-        return res.json({ examCount });
+        const anneeActive = await annee.findOne({ statutAnnee: 'Active' })
+
+        const examCount = await examen.find({ idAnnee: anneeActive.idAnnee });
+
+        return res.json({ examCount: examCount.length });
     } catch (error) {
 
     }
