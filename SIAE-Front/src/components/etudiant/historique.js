@@ -30,8 +30,8 @@ function HistoriqueContent() {
 
     const deleteHistorique = (idHisto) => {
         swal({
-            title: "Etes-vous sur?",
-            text: "Une fois supprime, vous ne pourrez plus recuperer cet information!",
+            title: "Êtes-vous sûr ?",
+            text: "Une fois supprimée, vous ne pourrez plus récupérer cette information !",
             icon: "warning",
             buttons: {
                 confirm: {
@@ -89,26 +89,24 @@ function HistoriqueContent() {
         <div className="container">
             <div className="page-inner">
                 <div className="page-header">
-                    <h3 className="fw-bold mb-3">Historiques des inscriptions</h3>
+                    <h3 className="fw-bold mb-3">Historique des inscriptions</h3>
                 </div>
                 <div className="col-md-12">
                     <div className="card">
                         <div className="card-header">
                             <div className="card-head-row card-tools-still-right">
-                                <div className="card-title">Activites recentes</div>
+                                <div className="card-title">Activités récentes</div>
                             </div>
                         </div>
 
                         <div className="card-body">
-
-                            <ol class="activity-feed" style={{ padding: '20px' }}>
+                            <ol className="activity-feed" style={{ padding: '20px' }}>
                                 {
                                     histoData && histoData.length > 0 ? (
                                         histoData.map((data) => (
-                                            <li class="feed-item feed-item-secondary">
-                                                <time className="date" >{formatDate(data.dateHisto)}</time>
-                                                <span className="text fw-bold text-md"
-                                                > {data.motifHisto} </span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                            <li className="feed-item feed-item-secondary">
+                                                <time className="date">{formatDate(data.dateHisto)}</time>
+                                                <span className="text fw-bold text-md">{data.motifHisto}</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
                                                 {
                                                     data.statutHisto === "Valide" ? (
@@ -126,45 +124,16 @@ function HistoriqueContent() {
                                             </li>
                                         ))
                                     ) : (
-                                        <div className="text-center">Aucun historique pour le moment</div>
+                                        <div className="text-center">Aucun historique pour le moment.</div>
                                     )
                                 }
-
                             </ol>
-
-                            {/* <ol >
-                                {
-                                    histoData && histoData.map((data) => (
-                                        <li key={data.idHisto}
-                                            className={data.statutHisto === "Valide" ? "feed-item feed-item-success mb-4" : data.statutHisto === "En attente" ? "feed-item feed-item-warning mb-4" : "feed-item feed-item-danger mb-4"}
-                                        >
-                                            <time className="date" >{formatDate(data.dateHisto)}</time>
-                                            <span className="text fw-bold text-md"
-                                            > {data.motifHisto} </span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
-                                            {
-                                                data.statutHisto === "Valide" ? (
-                                                    <span className="badge badge-success fw-bold">{data.statutHisto}</span>
-                                                ) : data.statutHisto === "En attente" ? (
-                                                    <span className="badge badge-warning fw-bold">{data.statutHisto}</span>
-                                                ) : (
-                                                    <span className="badge badge-danger fw-bold">{data.statutHisto}</span>
-                                                )
-                                            }
-
-                                            <div className='float-end pt-1'>
-                                                <i className='fa fa-times text-danger' onClick={() => deleteHistorique(data.idHisto)} style={{ cursor: 'pointer', fontSize: '20px' }}></i>
-                                            </div>
-                                        </li>
-                                    ))
-                                }
-
-                            </ol> */}
                         </div>
                     </div>
                 </div>
             </div>
-        </div >
+        </div>
+
 
     );
 }

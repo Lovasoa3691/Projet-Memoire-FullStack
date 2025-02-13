@@ -2,10 +2,12 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const Utilisateurs = require('../models/utilisateurs');
 const etudiant = require('../models/etudiant');
+const etudiantInfo = require('../models/etudiant')
 const administration = require('../models/administrateur');
 const utilisateurs = require('../models/utilisateurs');
 const adminCounter = require('../models/adminCounter');
-const secretaire = require('../models/secretaire')
+const secretaire = require('../models/secretaire');
+const annee = require('../models/anneeUniversitaire');
 
 const secretKey = process.env.SECRET_KEY || "mySecretKey3691";
 const refreshKey = process.env.REFRESH_SECRET_KEY || "mySecretKey3691_refresh";
@@ -13,11 +15,21 @@ const refreshKey = process.env.REFRESH_SECRET_KEY || "mySecretKey3691_refresh";
 async function login(req, res) {
     const { email, mdp } = req.body;
 
+    const anneeActive = await annee.findOne({ statutAnnee: 'Active' });
+
     try {
 
         const utilisateur = await Utilisateurs.findOne({ email });
         if (!utilisateur) {
             return res.json({ message: 'Utilisateur non trouvé' });
+        }
+
+        if (utilisateur.role === "Etudiant") {
+            const etudiantInfoCheck = await etudiantInfo.findOne({ matricule: utilisateur.id_ut, idAnnee: anneeActive.idAnnee })
+
+            if (!etudiantInfoCheck) {
+                return res.json({ message: 'Informations introuvable. Veullez ressayer plus tard s\'il vous plait !' });
+            }
         }
 
         const mdpValide = await bcrypt.compare(mdp, utilisateur.mdp);
@@ -346,21 +358,46 @@ async function getAllUsers(req, res) {
 async function disableAccountUser(req, res) {
     const { id } = req.params;
 
-    const userUpdate = await utilisateurs.findByIdAndUpdate(
-        id,
-        { statut_ut: 'Desactive' }
-    )
+    const infoUt = await utilisateurs.findById(id);
 
-    if (userUpdate) {
+    if (!infoUt) {
         return res.json({
-            succes: true,
-            message: 'Utilisateur desactive'
+            message: "Utilisateur non trouvé"
         })
     }
 
-    return res.json({
-        message: 'Utilisateur non trouve'
-    })
+    if (infoUt.statut_ut === 'Suspendu') {
+        const userUpdate = await utilisateurs.findByIdAndUpdate(
+            id,
+            { statut_ut: 'Active' }
+        )
+
+        return res.json({
+            succes: true,
+            message: 'Compte utilisateur activé'
+        })
+    } else {
+        const userUpdate = await utilisateurs.findByIdAndUpdate(
+            id,
+            { statut_ut: 'Suspendu' }
+        )
+
+        return res.json({
+            succes: true,
+            message: 'Compte utilisateur suspendu'
+        })
+    }
+
+    // if (userUpdate) {
+    //     return res.json({
+    //         succes: true,
+    //         message: 'Utilisateur desactive'
+    //     })
+    // }
+
+    // return res.json({
+    //     message: 'Utilisateur non trouve'
+    // })
 }
 
 async function deleteUser(req, res) {

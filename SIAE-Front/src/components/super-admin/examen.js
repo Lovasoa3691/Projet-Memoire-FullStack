@@ -56,25 +56,57 @@ function ExamenContent() {
             ),
             sortable: true,
         },
-        {
-            name: "ACTION",
-            cell: (row) => (
-                <div className="form-button-action" style={{ fontWeight: 'normal', fontSize: '20px' }}>
+        // {
+        //     name: "ACTION",
+        //     cell: (row) => (
+        //         <div className="form-button-action" style={{ fontWeight: 'normal', fontSize: '20px' }}>
 
-                    <i className="fas fa-file-alt text-primary"
-                        onClick={() => afficherListeEtudiantInscrit(row)}
-                        title="Inscriptions"
-                    ></i>
+        //             <i className="fas fa-file-alt text-primary"
+        //                 onClick={() => afficherListeEtudiantInscrit(row)}
+        //                 title="Inscriptions"
+        //             ></i>
 
-                </div>
-            )
-        },
+        //         </div>
+        //     )
+        // },
     ];
 
 
     const [search, setSearch] = useState("");
     const [filtre, setFiltre] = useState([]);
     const [examData, setExamData] = useState([]);
+    const [DonneFiltre, setDonneFiltre] = useState([]);
+
+    // const searchChange = (e) => {
+    //     const value = e.target.value;
+    //     setSearch(value);
+
+    //     const filtrer = examData.filter((item) =>
+    //         item.codeExam.toUpperCase().includes(value.toUpperCase()) ||
+    //         item.matiere.toUpperCase().includes(value.toUpperCase()) ||
+    //         item.classe.toUpperCase().includes(value.toUpperCase())
+    //     );
+
+    //     setDonneFiltre(filtrer);
+    // }
+
+    const searchChange = (e) => {
+        const value = e.target.value;
+        setSearch(value);
+
+        const filtrer = examData.filter((item) =>
+            (item.codeExam && String(item.codeExam).toUpperCase().includes(value.toUpperCase())) ||
+            (item.matiere && String(item.matiere).toUpperCase().includes(value.toUpperCase())) ||
+            (item.statut && String(item.statut).toUpperCase().includes(value.toUpperCase())) ||
+            (item.classe && (
+                Array.isArray(item.classe)
+                    ? item.classe.some(classeItem => String(classeItem).toUpperCase().includes(value.toUpperCase()))
+                    : String(item.classe).toUpperCase().includes(value.toUpperCase())
+            ))
+        );
+
+        setDonneFiltre(filtrer);
+    };
 
     const paginationComponentOptions = {
         rowsPerPageText: "Lignes par page",
@@ -89,6 +121,7 @@ function ExamenContent() {
         api.get('/examens/all')
             .then((rep) => {
                 setExamData(rep.data.examens);
+                setDonneFiltre(rep.data.examens);
                 // setFiltre(rep.data);
             })
             .catch(error => {
@@ -96,9 +129,35 @@ function ExamenContent() {
             })
     };
 
+    const verifieEtatExamen = async () => {
+        await api.get('/updateExamStatus')
+            .then((rep) => {
+                if (rep.data.succes) {
+                    console.log(rep.data.examMiseAJour)
+                    const resultat = rep.data.examMiseAJour;
+                    if (resultat.length > 0) {
+                        chargerExamens();
+                    } else {
+                        console.log("Aucun examen a mettre a jour")
+                    }
+                }
+            })
+            .catch((error) => {
+                console.error('Erreur:', error);
+            })
+    }
+
     useEffect(() => {
         chargerExamens();
+        const interval = setInterval(() => {
+            verifieEtatExamen();
+        }, 30000);
+        return () => clearInterval(interval);
     }, []);
+
+    // useEffect(() => {
+    //     chargerExamens();
+    // }, []);
 
     const [isVisibleList, setVisibleList] = useState(false);
 
@@ -134,7 +193,7 @@ function ExamenContent() {
 
             <div className="page-inner">
                 <div className="page-header">
-                    <h3 className="fw-bold mb-3">Liste des sessions d'examens mises en place</h3>
+                    <h3 className="fw-bold mb-3">Liste des sessions d'examen mises en place</h3>
                 </div>
 
                 {/* Liste etudiants inscrits a l'examen */}
@@ -153,7 +212,7 @@ function ExamenContent() {
                                     <div className="modal-header border-0">
                                         <h5 className="modal-title">
                                             <span className="fw-mediumbold"> </span>
-                                            <span className="fw-light"> Liste des etudiants inscrites a l'examen {matiere} du session {session} </span>
+                                            <span className="fw-light"> Liste des étudiants inscrits à l'examen {matiere} de la session {session} </span>
                                         </h5>
                                         <i className='fas fa-times fa-2x text-danger' onClick={closeListModal}></i>
                                     </div>
@@ -188,7 +247,7 @@ function ExamenContent() {
                                                                             </tr>
                                                                         ))
                                                                     ) : (
-                                                                        <div className='text-center'>Aucun etudiant inscrit</div>
+                                                                        <div className='text-center'>Aucun étudiant inscrit</div>
                                                                     )
                                                                 }
 
@@ -235,9 +294,8 @@ function ExamenContent() {
                                         type='text'
                                         placeholder='Recherche'
                                         className='ms-auto'
-                                        // value={search}
-                                        // onChange={(e) => setSearch(e.target.value)}
-
+                                        value={search}
+                                        onChange={searchChange}
                                         style={{
                                             padding: '7px',
                                             width: '300px',
@@ -253,7 +311,7 @@ function ExamenContent() {
                                     <DataTable
                                         className="table table-hover"
                                         columns={colonne}
-                                        data={examData}
+                                        data={DonneFiltre}
                                         pagination
                                         highlightOnHover
                                         noDataComponent="Aucune donnee disponible"

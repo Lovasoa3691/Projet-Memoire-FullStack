@@ -29,8 +29,8 @@ function TopNavBar() {
 
     const handleLogout = () => {
         swal({
-            title: "Deconnection en cours...",
-            text: "Veuillez patienter s'il vous plait.",
+            title: "Déconnexion en cours...",
+            text: "Veuillez patienter s'il vous plaît.",
             buttons: false,
             closeOnClickOutside: false,
             closeOnEsc: false,
@@ -75,7 +75,7 @@ function TopNavBar() {
             {/* <!-- Navbar Header --> */}
             <nav className="navbar navbar-header navbar-header-transparent navbar-expand-lg border-bottom">
                 <div className="container-fluid">
-                    <nav className="navbar navbar-header-left navbar-expand-lg navbar-form nav-search p-0 d-none d-lg-flex">
+                    {/* <nav className="navbar navbar-header-left navbar-expand-lg navbar-form nav-search p-0 d-none d-lg-flex">
                         <div className="input-group">
                             <div className="input-group-prepend">
                                 <button type="submit" className="btn btn-search pe-1">
@@ -84,10 +84,10 @@ function TopNavBar() {
                             </div>
                             <input type="text" placeholder="Recherche ..." className="form-control" />
                         </div>
-                    </nav>
+                    </nav> */}
 
                     <ul className="navbar-nav topbar-nav ms-md-auto align-items-center">
-                        <li className="nav-item topbar-icon dropdown hidden-caret d-flex d-lg-none">
+                        {/* <li className="nav-item topbar-icon dropdown hidden-caret d-flex d-lg-none">
                             <a className="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button"
                                 aria-expanded="false" aria-haspopup="true">
                                 <i className="fa fa-search"></i>
@@ -99,7 +99,7 @@ function TopNavBar() {
                                     </div>
                                 </form>
                             </ul>
-                        </li>
+                        </li> */}
 
 
                         {
@@ -143,7 +143,7 @@ function TopNavBar() {
                                         <a className="dropdown-item">Mon Profil</a> */}
 
                                                 <div className="dropdown-divider"></div>
-                                                <a className="dropdown-item" onClick={handleLogout}>Se Deconnecter</a>
+                                                <a className="dropdown-item" onClick={handleLogout}>Se Déconnecter</a>
                                             </li>
                                         </div>
                                     </ul>

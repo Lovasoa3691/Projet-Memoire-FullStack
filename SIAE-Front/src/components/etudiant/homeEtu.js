@@ -10,14 +10,15 @@ import ExamenContent from './examenEtu';
 import MyExamContent from './mes_examens';
 import NotificationContent from './notification';
 import HistoriqueContent from './historique';
+import Paiemnt from './paiementForm';
 import api from '../API/api';
 import EXAM from '../../assets/img/EXAM.png'
+import MyInscription from './mes_inscriptions';
 
 
 function Home() {
 
     const [isActive, setActive] = useState('dashboard');
-
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const [currentPage, setCurrentPage] = useState();
@@ -66,12 +67,7 @@ function Home() {
                     {/* <!-- Logo Header --> */}
                     <div className="logo-header" data-background-color="dark">
                         <a className="logo">
-                            <img
-                                src="/EXAM.png"
-                                alt="navbar brand"
-                                className="navbar-brand"
-                                height="50"
-                            />
+                            <h3 className='text-white fw-bold'>Exam Eazy</h3>
                         </a>
                         <div className="nav-toggle" >
                             <button className="btn btn-toggle toggle-sidebar">
@@ -138,6 +134,21 @@ function Home() {
                             </li>
 
                             <li
+                                className={isActive === "mes_inscriptions" ? "nav-item active" : "nav-item"} onClick={() => menuClick('mes_inscriptions', '/etudiant/inscriptions')}>
+                                <Link
+                                    // data-bs-toggle="collapse"
+                                    // className="collapsed"
+                                    // aria-expanded="false"
+                                    style={{ cursor: 'pointer', padding: '20px' }}
+                                >
+                                    <i className="fas fa-archive"></i>
+                                    <p>Mes inscriptions</p>
+                                    {/* <span className="caret"></span> */}
+
+                                </Link>
+                            </li>
+
+                            <li
                                 className={isActive === "historique" ? "nav-item active" : "nav-item"} onClick={() => menuClick("historique", '/etudiant/historique')}>
                                 <Link
                                     // data-bs-toggle="collapse"
@@ -174,6 +185,22 @@ function Home() {
                                     {/* <span className="caret"></span> */}
                                 </Link>
                             </li>
+
+
+                            {/* <li
+                                className={isActive === "paiement" ? "nav-item active" : "nav-item"} onClick={() => menuClick("paiement", '/etudiant/paiement')}>
+                                <Link
+                                    // data-bs-toggle="collapse"
+                                    // className="collapsed"
+                                    // aria-expanded="false"
+                                    style={{ cursor: 'pointer', padding: '20px' }}
+                                >
+                                    <i className="fas fa-file"></i>
+                                    <p>Paiements</p>
+                                   
+                                </Link>
+
+                            </li> */}
                         </ul>
                     </div>
                 </div>
@@ -191,7 +218,6 @@ function Home() {
                         </div>
                     </div>
                 )}
-
                 <Routes>
                     <Route path="dashboard" element={<DashboardEtu />}></Route>
                     {/* <Route path="etudiant" element={<StudentContent />}></Route> */}
@@ -199,6 +225,7 @@ function Home() {
                     <Route path="mes_examens" element={<MyExamContent />}></Route>
                     <Route path="historique" element={<HistoriqueContent />}></Route>
                     <Route path="notification" element={<NotificationContent />}></Route>
+                    <Route path="inscriptions" element={<MyInscription />}></Route>
                 </Routes>
                 <Footer />
             </div>

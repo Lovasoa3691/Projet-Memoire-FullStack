@@ -104,7 +104,7 @@ const Dashboard = () => {
                                         ><a>{examCount} <small></small></a></b
                                         >
                                     </h5>
-                                    <small className="text-muted">Examens planifies</small>
+                                    <small className="text-muted">Examens planifiés</small>
                                 </div>
                             </div>
                         </div>
@@ -121,7 +121,7 @@ const Dashboard = () => {
                                         ><a>{examProcessingCount} <small>En Cours</small></a></b
                                         >
                                     </h5>
-                                    <small className="text-muted">{examTermineCount} Termine / {examAnnuleCount} Annule</small>
+                                    <small className="text-muted">{examTermineCount} Terminé / {examAnnuleCount} Annulé</small>
                                 </div>
                             </div>
                         </div>
@@ -138,7 +138,7 @@ const Dashboard = () => {
                                         ><a>{data} <small></small></a></b
                                         >
                                     </h5>
-                                    <small className="text-muted">Total etudiants</small>
+                                    <small className="text-muted">Total étudiants</small>
                                 </div>
                             </div>
                         </div>
@@ -155,7 +155,7 @@ const Dashboard = () => {
                                         ><a>{insCount} <small></small></a></b
                                         >
                                     </h5>
-                                    <small className="text-muted">Etudiants inscrits</small>
+                                    <small className="text-muted">Etudiants inscrit(e)s</small>
                                 </div>
                             </div>
                         </div>
@@ -167,7 +167,7 @@ const Dashboard = () => {
                         <div className="card card-round">
                             <div className="card-header">
                                 <div className="card-head-row">
-                                    <div className="card-title">Statistiques des etudiants</div>
+                                    <div className="card-title">Statistiques des étudiants</div>
                                 </div>
                             </div>
 
@@ -183,7 +183,7 @@ const Dashboard = () => {
                     <div className="col-md-8">
                         <div className="card">
                             <div className="card-header">
-                                <div className="card-title">Les prochaine examens a suivre</div>
+                                <div className="card-title">Les prochains examens à suivre</div>
                             </div>
                             <div className="card-body">
 
@@ -234,7 +234,7 @@ const Dashboard = () => {
                                     <div className="card-header">
                                         <div className="d-flex align-items-center">
 
-                                            <h5 className="card-title">Prochain examen: [{examEnCours[0].examen.matiere} - {formatDate(examEnCours[0].examen.dateExam)}] ( {examEnCours[0].infoEtudiant.length} etudiants inscrits )</h5>
+                                            <h5 className="card-title">Prochain examen: [{examEnCours[0].examen.matiere} - {formatDate(examEnCours[0].examen.dateExam)}] ( {examEnCours[0].infoEtudiant.length} étudiants inscrits )</h5>
 
 
                                         </div>
@@ -272,7 +272,7 @@ const Dashboard = () => {
                                                             </table>
                                                         </div>
                                                     ) : (
-                                                        <div className="text-center">Aucun etudiant inscrit a cet examen</div>
+                                                        <div className="text-center">Aucun étudiant inscrit à cet examen</div>
                                                     )
                                                 }
                                             </div>

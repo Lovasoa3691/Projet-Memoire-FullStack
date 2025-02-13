@@ -114,8 +114,8 @@ function NotificationContent() {
 
     const deleteNotification = (idNot) => {
         swal({
-            title: "Etes-vous sur?",
-            text: "Une fois supprime, vous ne pourrez plus recuperer ce fichier !",
+            title: "Êtes-vous sûr ?",
+            text: "Une fois supprimé, vous ne pourrez plus récupérer cet information !",
             icon: "warning",
             buttons: {
                 confirm: {
@@ -128,6 +128,7 @@ function NotificationContent() {
                     className: "btn btn-danger"
                 }
             },
+
             // dangerMode: true,
         }).then((willDelete) => {
             if (willDelete) {
@@ -164,8 +165,6 @@ function NotificationContent() {
     }
 
     const nom = "INSITUT DE FORMATION TECHNIQUE";
-
-
 
     return (
         <div className="container">
@@ -224,7 +223,7 @@ function NotificationContent() {
                                     )
                                     )
                                 ) : (
-                                    <div className="text-center">Aucun nouvelles notifications trouvees</div>
+                                    <div className="text-center">Aucune nouvelle notification trouvée</div>
                                 )
 
                             }

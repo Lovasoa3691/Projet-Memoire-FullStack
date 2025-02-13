@@ -449,9 +449,19 @@ function UtilisateurContent() {
                                                                             {item.statut_ut}
                                                                         </td>
                                                                         <td className="text-center" style={{ fontSize: '20px' }}>
-                                                                            <i className="fas fa-eye-slash" style={{ cursor: 'pointer' }}
-                                                                                onClick={() => desactiverUtilisateur(item)}
-                                                                            ></i>
+                                                                            {
+                                                                                item.statut_ut === "Active" ? (
+                                                                                    <i className="fas fa-eye-slash" style={{ cursor: 'pointer' }}
+                                                                                        onClick={() => desactiverUtilisateur(item)}
+                                                                                    ></i>
+
+                                                                                ) : (
+                                                                                    <i className="fas fa-eye" style={{ cursor: 'pointer' }}
+                                                                                        onClick={() => desactiverUtilisateur(item)}
+                                                                                    ></i>
+
+                                                                                )
+                                                                            }
                                                                             &nbsp;&nbsp;
                                                                             <i className="fas fa-trash text-danger"
                                                                                 onClick={() => supprimerUtilisateur(item)}

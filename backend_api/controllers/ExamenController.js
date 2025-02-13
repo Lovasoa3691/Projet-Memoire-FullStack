@@ -497,18 +497,6 @@ async function CreerExamen(req, res) {
             }
         });
 
-        for (const email of etuMail) {
-            await transporter.sendMail({
-                from: '"Institut de Formation Technique" <lovaniainasarahandrianarisoa@gmail.com>',
-                to: email,
-                subject: "Preparez-vous pour les nouvelles sessions d'examen.",
-                text: `Chers etudiants,\n 
-                    De nouvelles sessions d'examen ont ete ouvertes! 
-                    C'est l'occasion ideale de demontrer vos competences et de valider vos acquis. 
-                    Consultez votre espace etudiant des maintenant pour plus de details.`,
-            });
-        }
-
         // if (etuMatricule.length === 0) {
         //     return res.json({
         //         message: "Etudiant Inconnu"
@@ -521,12 +509,12 @@ async function CreerExamen(req, res) {
 
         const newNotification = new notification({
             idNot: idNot,
-            titre: `Nouvelle session d'examen disponible !`,
-            objet: `Chers etudiants,\n
-                Une nouvelle examen supplementaire vient d'etre ajoutee.
-                Ne manquez pas cette opportuinite ! \n
-                Les inscriptions sont ouvertes pour une duree limitee.
-                Consultez votre espace << session d'examen disponible >> pour plus de details.`,
+            titre: `Nouvel examen disponible !`,
+            objet: `Chers étudiants,\n
+            Un nouvel examen supplémentaire vient d'être ajouté.
+            Ne manquez pas cette opportunité ! \n
+            Les inscriptions sont ouvertes pour une durée limitée.
+            Consultez votre espace << session d'examen disponible >> pour plus de détails.`,
             dateEnvoi: new Date()
         });
 
@@ -543,10 +531,80 @@ async function CreerExamen(req, res) {
             await newNotificationEtu.save();
         }
 
-        return res.json({
-            succes: true,
-            message: "Examen ajoute avec succes"
-        });
+
+
+        // setTimeout(async () => {
+        // for (const email of etuMail) {
+        //     try {
+        //         await transporter.sendMail({
+        //             from: '"Institut de Formation Technique" <lovaniainasarahandrianarisoa@gmail.com>',
+        //             to: email,
+        //             subject: "Préparez-vous pour de nouveaux examens.",
+        //             text: `Chers étudiants,
+        //         De nouvelles sessions d'examen ont été ouvertes ! 
+        //         C'est l'occasion idéale de démontrer vos compétences et de valider vos acquis. 
+        //         Consultez votre espace étudiant dès maintenant pour plus de détails.`,
+        //         });
+
+        //         await Promise.all()
+        //         return res.json({
+        //             mail: true,
+        //             message: "Notification envoié !"
+        //         })
+        //     } catch (error) {
+        //         return res.json({
+        //             mail: false,
+        //             message: "Impossible d'envoyer l'email, problème de connexion"
+        //         })
+        //     }
+        // }
+        var mail = false;
+
+        try {
+            const emailPromises = etuMail.map(email =>
+                transporter.sendMail({
+                    from: '"Institut de Formation Technique" <lovaniainasarahandrianarisoa@gmail.com>',
+                    to: email,
+                    subject: "Préparez-vous pour de nouveaux examens.",
+                    text: `Chers étudiants,
+                        De nouvelles sessions d'examen ont été ouvertes ! 
+                        C'est l'occasion idéale de démontrer vos compétences et de valider vos acquis. 
+                        Consultez votre espace étudiant dès maintenant pour plus de détails.`,
+                })
+            );
+
+            // Attendre l'envoi de tous les emails
+            await Promise.all(emailPromises);
+
+            console.log("succes")
+            return res.json({
+                mail: true,
+                succes: true,
+                message: "Examen ajouté avec succès"
+            });
+            // return res.json({
+            //     mail: true,
+            //     // message: "Notification envoié !"
+            // });
+        } catch (error) {
+            console.log("erreur")
+            return res.json({
+                mail: false,
+                succes: true,
+                message: "Examen ajouté avec succès"
+            });
+            // return res.json({
+            //     mail: false,
+            //     // message: "Impossible d'envoyer l'email, problème de connexion !"
+            // });
+        }
+        // }, 2000);
+
+
+        // return res.json({
+        //     succes: true,
+        //     message: "Examen ajouté avec succès"
+        // });
 
     } catch (error) {
         console.log(error.message)
@@ -568,7 +626,7 @@ async function supprimeExamen(req, res) {
         }
 
         const examenCible = await examen.findOneAndDelete({ idExam: idExam });
-        const inscriptionCible = await inscription.findOneAndDelete({ idExam: idExam });
+        const inscriptionCible = await inscription.deleteMany({ idExam: idExam });
 
         if (!examenCible || !inscriptionCible) {
             return res.json({
@@ -578,7 +636,7 @@ async function supprimeExamen(req, res) {
 
         return res.json({
             succes: true,
-            message: "Examen supprime avec succes"
+            message: "Examen supprimé avec succès"
         })
     } catch (error) {
         console.log(error.message)
@@ -594,28 +652,127 @@ async function annuleExamen(req, res) {
     try {
         const { idExam } = req.params;
 
+        const anneeActive = await annee.findOne({ statutAnnee: 'Active' })
+
         if (!idExam) {
             return res.json({
-                message: "Examen non trouve"
+                message: "Examen non trouvé"
             })
         }
 
         const examenCible = await examen.findOneAndUpdate(
-            { idExam: idExam },
+            { idExam: idExam, idAnnee: anneeActive.idAnnee },
             { $set: { statut: "Annule" } }
         );
-        // const inscriptionCible = await inscription.findOneAndDelete({ idExam: idExam });
+
 
         if (!examenCible) {
             return res.json({
-                message: "Examen non trouve"
+                message: "Examen non trouvé"
             })
         }
 
-        return res.json({
-            succes: true,
-            message: "Examen est annule"
+        const mentionsNiveaux = examenCible.classe.map(cls => {
+            const [mention, niveau] = cls.split(' ');
+            return { mention, niveau };
         })
+
+        const etudiantsList = await Promise.all(
+            mentionsNiveaux.map(async ({ mention, niveau }) => {
+                return await etudiant.find({ mention, niveau, idAnnee: anneeActive.idAnnee });
+            })
+        )
+
+        const allEtudiants = etudiantsList.flat();
+
+        const matricules = allEtudiants.map(etudiant => etudiant.matricule);
+
+        const inscriptions = await inscription.find({ etudiantMatricule: { $in: matricules } });
+
+        const matriculesInscrites = inscriptions.map(incs => incs.etudiantMatricule);
+
+        const users = await Utilisateurs.find({ id_ut: { $in: matriculesInscrites } });
+
+        const etuMatricule = users.map(user => (user.id_ut));
+        const etuMail = users.map(user => (user.email));
+
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'lovaniainasarahandrianarisoa@gmail.com',
+                pass: 'xsgh bsrp xukf klti'
+            }
+        });
+
+        const seqNumberNot = await getNextSequenceValue('notificationId');
+        const idNot = `NOT_${seqNumberNot.toString().padStart(2, '0')}`;
+
+        const newNotification = new notification({
+            idNot: idNot,
+            titre: `Annulation d'examen`,
+            objet: `Chers étudiants,\n
+                    Nous regrettons de vous informer que la session d'examen prévue a été annulée.
+                    Veuillez consulter votre espace pour plus d'informations concernant cette annulation et les démarches à suivre.\n
+                    Nous vous présentons nos excuses pour la gêne occasionnée et vous tiendrons informés des prochaines sessions disponibles.`,
+            dateEnvoi: new Date()
+        });
+
+        await newNotification.save();
+
+        const idNotFinal = newNotification.idNot;
+
+        for (const matriculeEtudiant of etuMatricule) {
+            const newNotificationEtu = new notificationEtu({
+                etuMatricule: matriculeEtudiant,
+                idNot: idNotFinal,
+                dateRecept: new Date()
+            });
+            await newNotificationEtu.save();
+        }
+
+        var mail = false;
+
+        // setTimeout(async () => {
+        try {
+            const emailPromises = etuMail.map(email =>
+                transporter.sendMail({
+                    from: '"Institut de Formation Technique" <lovaniainasarahandrianarisoa@gmail.com>',
+                    to: email,
+                    subject: "Annulation d'examen.",
+                    text: `Chers étudiants,\n
+                                Nous regrettons de vous informer que la session d'examen prévue a été annulée.
+                                Veuillez consulter votre espace pour plus d'informations concernant cette annulation et les démarches à suivre.\n
+                                Nous vous présentons nos excuses pour la gêne occasionnée et vous tiendrons informés des prochaines sessions disponibles.`,
+                })
+            );
+
+            // Attendre l'envoi de tous les emails
+            await Promise.all(emailPromises);
+            mail = true;
+
+            console.log("succes")
+            return res.json({
+                succes: true,
+                mail: mail,
+                message: "Examen est annulé !"
+            })
+        } catch (error) {
+            mail = false;
+            console.log("erreur")
+            return res.json({
+                succes: true,
+                mail: mail,
+                message: "Examen est annulé !"
+            });
+        }
+        // }, 2000);
+
+
+        // return res.json({
+        //     succes: true,
+        //     mail: mail,
+        //     message: "Examen est annulé !"
+        // })
     } catch (error) {
         console.log(error.message)
         return res.json({

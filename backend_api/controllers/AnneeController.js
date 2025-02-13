@@ -50,12 +50,20 @@ async function CreerAnnee(req, res) {
     const { debut, fin } = req.body;
 
 
-
     const utilisateur = await utilisateurs.findOne({ email });
 
     if (!debut || !fin) {
         res.json({
             message: "Informations manquantes"
+        })
+    }
+
+    const anneeExistant = await annee.findOne({ debut: debut, fin: fin });
+
+    if (anneeExistant) {
+        return res.json({
+            succes: false,
+            message: "Cet année existe déjà !"
         })
     }
 

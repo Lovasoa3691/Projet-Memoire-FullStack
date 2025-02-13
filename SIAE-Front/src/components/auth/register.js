@@ -1,7 +1,8 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from 'react';
 import axios from "axios";
 import swal from "sweetalert";
+import exam from '../../assets/img/3.png';
 
 
 function Register() {
@@ -38,12 +39,12 @@ function Register() {
         // alert(formatPrenom)
 
         axios.post('http://localhost:5000/api/inscription',
-            { nom: nom.toUpperCase(), prenom: prenom, nomUt: nomUt, email: email, mdp: mdp }
+            { nom: nom.toLowerCase(), prenom: prenom.toLowerCase(), nomUt: nomUt, email: email, mdp: mdp }
         )
             .then((rep) => {
                 if (rep.data.message === "sucess") {
                     swal({
-                        title: "Votre compte a ete cree avec succes",
+                        title: "Votre compte à été crée avec succès",
                         text: "Voulez-vous connecter avec ce compte maintenant?",
                         icon: "info",
                         buttons: {
@@ -58,16 +59,17 @@ function Register() {
                             }
                         },
                         // dangerMode: true,
-                    }).then((willDelete) => {
-                        if (willDelete) {
-                            swal("Poof! Votre donnee a ate supprime!", {
-                                icon: "success",
-                                buttons: {
-                                    confirm: {
-                                        className: "btn btn-success",
-                                    },
-                                },
-                            });
+                    }).then((confirm) => {
+                        if (confirm) {
+                            navigate('/', { replace: true });
+                            // swal("Poof! Votre donnee a ate supprime!", {
+                            //     icon: "success",
+                            //     buttons: {
+                            //         confirm: {
+                            //             className: "btn btn-success",
+                            //         },
+                            //     },
+                            // });
                         } else {
                             swal.close();
                         }
@@ -84,7 +86,6 @@ function Register() {
             .catch(error => {
                 console.log("Erreur lors de la recuperation des donnees: ", error);
             })
-
     }
 
     return (
@@ -100,7 +101,7 @@ function Register() {
             <div className="login">
                 <div className="uf-form-signin">
                     <div className="text-center">
-                        <img src="" alt="" width="100" height="100" />
+                        <img src={exam} alt="" width="250" height="250" />
 
                         <h1 className="text-white h3">Registration</h1>
                         <h5 className="text-white">Fournir votre nom et prenoms exacte s'il vous plait!</h5>
@@ -149,7 +150,7 @@ function Register() {
                         </div>
 
                         <div className="mt-4 text-center">
-                            <span className="text-white">Deja membre? &nbsp; &nbsp;</span>
+                            <span className="text-white">Déjà membre? &nbsp; &nbsp;</span>
                             <Link onClick={() => changeUrl('/')} className="text-primary">Se connecter</Link>
                         </div>
                     </form>

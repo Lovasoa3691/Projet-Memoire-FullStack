@@ -21,7 +21,7 @@ function StudentContent() {
         },
         {
             name: "NOM",
-            selector: row => row.nomEtu,
+            selector: row => (row.nomEtu).toUpperCase(),
             sortable: true,
         },
         {
@@ -98,8 +98,8 @@ function StudentContent() {
 
     const supprimerEtudiant = (id) => {
         swal({
-            title: "Etes-vous sur?",
-            text: "Une fois supprime, vous ne pourrez plus recuperer ce fichier !",
+            title: "Etes-vous sûr?",
+            text: "Une fois supprimé, vous ne pourrez plus récuperé cet information !",
             icon: "warning",
             buttons: {
                 confirm: {
@@ -142,7 +142,7 @@ function StudentContent() {
                 setDonneFiltre(rep.data.etudiant);
             })
             .catch(error => {
-                console.log("Erreur lors de la recuperation des donnees: ", error);
+                console.log("Erreur lors de la récuperation des données: ", error);
             })
     };
 
@@ -194,7 +194,6 @@ function StudentContent() {
             (!mention || item.mention === mention.value) &&
             (!niveau || item.niveau === niveau.value)
         )
-
         setDonneFiltre(filtered);
     }
 
@@ -384,13 +383,16 @@ function StudentContent() {
         html2pdf().set(options).from(table).save();
     }
 
+    //     import { jsPDF } from 'jspdf';
+    // import 'jspdf-autotable';
+
     const ImprimerEtudiantsPDF = () => {
         const doc = new jsPDF();
         const colonnes = ["MATRICULE", "NOM", "PRENOM"];
-        const ligne = donneeFiltre.map((ligne) => [ligne.matricule, ligne.nomEtu, ligne.prenomEtu]);
+        const ligne = donneeFiltre.map((ligne) => [ligne.matricule, (ligne.nomEtu).toUpperCase(), ligne.prenomEtu]);
 
         if (selectedMention && selectedNiveau) {
-            doc.text(`Liste des etudiants ${selectedMention.value} ${selectedNiveau.value}`, 15, 10);
+            doc.text(`Liste des étudiants ${selectedMention.value} ${selectedNiveau.value}`, 15, 10);
             doc.autoTable({
                 head: [colonnes],
                 body: ligne,
@@ -399,7 +401,7 @@ function StudentContent() {
 
             doc.save(`${selectedMention.value}_${selectedNiveau.value}.pdf`);
         } else {
-            doc.text(`Liste des etudiants`, 15, 10);
+            doc.text(`Liste des étudiants`, 15, 10);
             doc.autoTable({
                 head: [colonnes],
                 body: ligne,
@@ -416,7 +418,7 @@ function StudentContent() {
 
             <div className="page-inner">
                 <div className="page-header">
-                    <h3 className="fw-bold mb-3">Liste des etudiants</h3>
+                    <h3 className="fw-bold mb-3">Liste des étudiants</h3>
                 </div>
 
 
@@ -455,7 +457,7 @@ function StudentContent() {
                                             </div>
                                         </div>
                                         &nbsp;&nbsp;&nbsp;
-                                        <div className="btn btn-label-secondary btn-round btn-sm"
+                                        {/* <div className="btn btn-label-secondary btn-round btn-sm"
                                             onClick={openFileDialog}>
                                             <span className="btn-label">
                                                 Importer
@@ -467,7 +469,7 @@ function StudentContent() {
                                                 style={{ display: 'none' }}
                                                 onChange={importFile}
                                             />
-                                        </div>
+                                        </div> */}
                                     </div>
                                     <button
                                         className="btn btn-primary btn-round btn-border ms-auto"
@@ -499,8 +501,8 @@ function StudentContent() {
                                                     <div className="modal-content">
                                                         <div className="modal-header border-0">
                                                             <h5 className="modal-title">
-                                                                <span className="fw-mediumbold"> Nouvelle</span>
-                                                                <span className="fw-light"> Enregistrement </span>
+                                                                <span className="fw-mediumbold"> Nouvel</span>
+                                                                <span className="fw-light"> enregistrement </span>
                                                             </h5>
                                                             <i className='fa fa-times fa-2x text-danger'
                                                                 onClick={closeModal}
@@ -529,7 +531,7 @@ function StudentContent() {
                                                                 </div>
                                                                 <div className="col-sm-12">
                                                                     <div className="form-group">
-                                                                        <label>Prenom</label>
+                                                                        <label>Prénom</label>
                                                                         <input
                                                                             value={etudiantData.prenomEtu}
                                                                             onChange={handleChangeData}
@@ -638,66 +640,63 @@ function StudentContent() {
                                 )}
 
 
-                                <div className="table-responsive">
+                                {/* <div className="table-responsive"> */}
 
-                                    <DataTable
-                                        className="table table-hover"
-                                        columns={colonne}
-                                        data={donneeFiltre}
-                                        pagination
-                                        highlightOnHover
-                                        paginationComponentOptions={paginationComponentOptions}
-                                        // striped
-                                        subHeader
-                                        subHeaderComponent={
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <DataTable
+                                    className="table table-hover"
+                                    columns={colonne}
+                                    data={donneeFiltre}
+                                    pagination
+                                    highlightOnHover
+                                    paginationComponentOptions={paginationComponentOptions}
+                                    // striped
+                                    subHeader
+                                    subHeaderComponent={
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <Select
+                                                options={mentionOptions}
+                                                placeholder="Selectionner une mention"
+                                                value={selectedMention}
+                                                onChange={handleMentionChange}
+                                                isClearable
+                                            />
+                                            &nbsp;&nbsp;&nbsp;
 
-                                                <Select
-                                                    options={mentionOptions}
-                                                    placeholder="Selectionner une mention"
-                                                    value={selectedMention}
-                                                    onChange={handleMentionChange}
-                                                    isClearable
-                                                />
-                                                &nbsp;&nbsp;&nbsp;
+                                            <Select
+                                                options={niveauOptions}
+                                                placeholder="Selectionner un niveau"
+                                                value={selectedNiveau}
+                                                onChange={handleNiveauChange}
+                                                isClearable
+                                            />
+                                        </div>
+                                    }
 
-                                                <Select
-                                                    options={niveauOptions}
-                                                    placeholder="Selectionner un niveau"
-                                                    value={selectedNiveau}
-                                                    onChange={handleNiveauChange}
-                                                    isClearable
-                                                />
-
-
-                                            </div>
-                                        }
-
-                                        customStyles={{
-                                            rows: {
-                                                style: {
-                                                    backgroundColor: '#f8f9fa',
-                                                    '&:nth-of-type(odd)': {
-                                                        backgroundColor: '#e9ecef'
-                                                    },
-                                                }
-                                            },
-                                            headCells: {
-                                                style: {
-                                                    backgroundColor: '#343a40',
-                                                    color: '#ffffff',
-                                                    fontWeight: 'bold',
-                                                    textAlign: 'center'
+                                    customStyles={{
+                                        rows: {
+                                            style: {
+                                                backgroundColor: '#f8f9fa',
+                                                '&:nth-of-type(odd)': {
+                                                    backgroundColor: '#e9ecef'
                                                 },
+                                            }
+                                        },
+                                        headCells: {
+                                            style: {
+                                                backgroundColor: '#343a40',
+                                                color: '#ffffff',
+                                                fontWeight: 'bold',
+                                                textAlign: 'center'
                                             },
-                                            cells: {
-                                                style: {
-                                                    textAlign: 'center',
-                                                },
+                                        },
+                                        cells: {
+                                            style: {
+                                                textAlign: 'center',
                                             },
-                                        }}
-                                    />
-                                </div>
+                                        },
+                                    }}
+                                />
+                                {/* </div> */}
                             </div>
                         </div>
                     </div>

@@ -213,10 +213,31 @@ async function getEtudiantCount(req, res) {
     }
 }
 
+async function updateAllStudent(req, res) {
+    const result = await etudiant.updateMany(
+        {},
+        [
+            {
+                $set: {
+                    nomEtu: { $toLower: "$nomEtu" },
+                    prenomEtu: { $toLower: "$prenomEtu" }
+                }
+            }
+        ]
+    );
+
+    console.log(`${result.modifiedCount} étudiants mis à jour.`);
+    res.json({
+        message: "Etudiants mis a jour"
+    })
+
+}
+
 module.exports = {
     getAllEtudiant,
     AjouterEtudiant,
     mettreAjourEtudiant,
     supprimerEtudiant,
-    getEtudiantCount
+    getEtudiantCount,
+    updateAllStudent
 }

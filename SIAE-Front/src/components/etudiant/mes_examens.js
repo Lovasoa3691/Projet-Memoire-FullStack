@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios';
 import swal from 'sweetalert';
 import api from '../API/api';
+import Select from 'react-select';
 
 function MyExamContent() {
 
@@ -29,7 +30,7 @@ function MyExamContent() {
         chargerExamens();
         const interval = setInterval(() => {
             verifieEtatExamen();
-        }, 60000);
+        }, 30000);
         return () => clearInterval(interval);
     }, []);
 
@@ -39,6 +40,7 @@ function MyExamContent() {
                 // console.log(rep.data);
                 // setMatriculeEtu(rep.data.etu['matricule']);
                 setMesExamens(rep.data);
+                setDonneFiltre(rep.data);
             })
             .catch((error) => {
                 // localStorage.removeItem('token');
@@ -63,7 +65,7 @@ function MyExamContent() {
         const statut = cells[5].textContent;
 
         if (statut === "En cours") {
-            swal("Desole ! Vous ne pouvez pas supprimer un examen en cours!", {
+            swal("Désolé ! Vous ne pouvez pas supprimer un examen en cours !", {
                 title: 'Interruption',
                 icon: "warning",
                 buttons: {
@@ -72,10 +74,11 @@ function MyExamContent() {
                     },
                 },
             });
+
         } else {
             swal({
-                title: "Etes-vous sur?",
-                text: "Une fois supprime, vous ne pourrez plus recuperer ce fichier !",
+                title: "Êtes-vous sûr ?",
+                text: "Une fois supprimé, vous ne pourrez plus récupérer cet information !",
                 icon: "warning",
                 buttons: {
                     confirm: {
@@ -88,6 +91,7 @@ function MyExamContent() {
                         className: "btn btn-danger"
                     }
                 },
+
                 // dangerMode: true,
             }).then((willDelete) => {
                 if (willDelete) {
@@ -125,6 +129,32 @@ function MyExamContent() {
 
     };
 
+    const [selectedFiltre, setSelectedFiltre] = useState(null);
+    const [donneeFiltre, setDonneFiltre] = useState([])
+
+    const filtreOptions = [
+        { value: null, label: "Tous" },
+        { value: "Termine", label: "Terminé" },
+        { value: "Annule", label: "Annulé" },
+        { value: "En cours", label: "En cours" },
+    ]
+
+    useEffect(() => {
+        filtrerData(selectedFiltre);
+        console.log(selectedFiltre);
+    }, [selectedFiltre]);
+
+    const filtrerData = (selected) => {
+        const filtered = mesExamens.filter(item =>
+            !selected || !selected.value || item.statut === selected.value
+        );
+        setDonneFiltre(filtered);
+    };
+
+    const handleFiltreChange = (selected) => {
+        setSelectedFiltre(selected);
+    };
+
     return (
         <div className="container">
 
@@ -136,35 +166,71 @@ function MyExamContent() {
                 <div className="row">
                     <div className="col-md-12">
                         <div className="card">
+                            <div className="card-header">
+                                <div className="d-flex align-items-center">
+                                    <div className="card-tools d-flex align-items-center">
+
+                                        {/* <div className="dropdown">
+                                            <button
+                                                className="btn btn-label-success btn-round btn-sm dropdown-toggle"
+                                                type="button"
+                                                id="dropdownMenuButton"
+                                                data-bs-toggle="dropdown"
+                                                aria-haspopup="true"
+                                                aria-expanded="false"
+                                            >
+                                                Exporter
+                                            </button>
+
+                                        </div> */}
+
+                                    </div>
+                                    {/* <div
+                                        className=" ms-auto"
+                                    // data-bs-toggle="modal"
+                                    // data-bs-target="#addRowModal"
+                                    // onClick={openModal}
+                                    > <label className='label-control'> Filtrer par : &nbsp;&nbsp;&nbsp;</label>
+                                        <Select
+                                            options={filtreOptions}
+                                            placeholder="Selectionner"
+                                            value={selectedFiltre}
+                                            onChange={handleFiltreChange}
+                                            isClearable
+                                        />
+                                    </div> */}
+                                </div>
+                            </div>
                             <div className="card-body">
 
                                 <div className="table-responsive">
                                     <div className="col-md-12">
 
                                         {/* <div className="card"> */}
-                                        <div className="card-header">
+                                        {/* <div className="card-header">
                                             <div className="card-title">Journal de mes examens</div>
-                                        </div>
+                                        </div> */}
                                         <div className="card-body">
 
                                             {
-                                                mesExamens && mesExamens.length > 0 ? (
+                                                donneeFiltre && donneeFiltre.length > 0 ? (
                                                     <table className="table table-bordered table-head-bg-info table-bordered-bd-info mt-4">
                                                         <thead>
                                                             <tr className='text-center'>
-                                                                <th scope='col'>SESSION</th>
+                                                                <th scope="col">SESSION</th>
                                                                 <th scope="col">DATE</th>
-                                                                <th scope="col">MATIERE</th>
+                                                                <th scope="col">MATIÈRE</th>
                                                                 <th scope="col">HORAIRE</th>
-                                                                <th scope="col">DUREE</th>
+                                                                <th scope="col">DURÉE</th>
                                                                 <th scope="col">STATUT</th>
-                                                                <th scope='col'>ACTIONS</th>
+                                                                <th scope="col">ACTIONS</th>
+
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             {
 
-                                                                mesExamens.map((ex) => (
+                                                                donneeFiltre.map((ex) => (
                                                                     <tr key={ex.mon_inscription._id} data-key={ex.mon_inscription._id} className='text-center fw-bold'>
                                                                         <td>{ex.mon_examen.codeExam}</td>
                                                                         <td>{formatDate(ex.mon_examen.dateExam)}</td>
@@ -172,7 +238,7 @@ function MyExamContent() {
                                                                         <td>{ex.mon_examen.heureDebut} - {ex.mon_examen.heureFin}</td>
                                                                         <td>{ex.mon_examen.duree}</td>
                                                                         <td>
-                                                                            <span className={ex.mon_examen.statut === "Termine" ? "badge badge-primary fw-bold" : "badge badge-warning fw-bold"}>{ex.mon_examen.statut}</span>
+                                                                            <span className={ex.mon_examen.statut === "Termine" ? "badge badge-primary fw-bold" : ex.mon_examen.statut === "En cours" ? "badge badge-warning fw-bold" : "badge badge-danger fw-bold"}>{ex.mon_examen.statut}</span>
                                                                         </td>
                                                                         <td>
                                                                             <i className='fa fa-times text-danger'
@@ -182,15 +248,12 @@ function MyExamContent() {
                                                                     </tr>
                                                                 ))
                                                             }
-
-
                                                         </tbody>
                                                     </table>
                                                 ) : (
-                                                    <div className="text-center">Vous n'avez pas encore des nouvelles sessions d'examens a suivre</div>
+                                                    <div className="text-center">Vous n'avez pas encore de nouvelles sessions d'examens à suivre</div>
                                                 )
                                             }
-
 
                                         </div>
                                         {/* </div> */}

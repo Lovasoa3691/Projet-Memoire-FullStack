@@ -144,8 +144,8 @@ function SalleContent() {
 
     const deleteSalle = (idSalle) => {
         swal({
-            title: "Etes-vous sur?",
-            text: "Une fois supprime, vous ne pourrez plus recuperer ce fichier !",
+            title: "Etes-vous sûr?",
+            text: "Une fois supprimé, cette information ne pourra pas être récupérée !",
             icon: "warning",
             buttons: {
                 confirm: {
@@ -188,7 +188,7 @@ function SalleContent() {
     const openModalEdit = (data) => {
         setVisible(true)
         setIsEdit(true);
-        setBtnLabel('Mettre a jour');
+        setBtnLabel('Mettre à jour');
 
         salleForm.idSalle = data.idSalle
         salleForm.numSalle = data.numSalle
@@ -240,7 +240,7 @@ function SalleContent() {
                                         onClick={openModal}
                                     >
                                         <i className="fa fa-plus">&nbsp;&nbsp;</i>
-                                        Nouveau Salle
+                                        Nouvelle salle
                                     </button>
                                 </div>
                             </div>
@@ -262,8 +262,8 @@ function SalleContent() {
                                                     <div className="modal-content">
                                                         <div className="modal-header border-0">
                                                             <h5 className="modal-title">
-                                                                <span className="fw-mediumbold"> Nouvelle</span>
-                                                                <span className="fw-light"> Enregistrement </span>
+                                                                <span className="fw-mediumbold"> Nouvel</span>
+                                                                <span className="fw-light"> enregistrement </span>
                                                             </h5>
 
                                                             <span aria-hidden="true" className='fas fa-2x fa-times text-danger' onClick={closeModal}></span>
@@ -276,7 +276,7 @@ function SalleContent() {
 
                                                                 <div className="col-sm-12">
                                                                     <div className="form-group">
-                                                                        <label>Numero de la salle</label>
+                                                                        <label>Numéro de la salle</label>
                                                                         <input
                                                                             onChange={handleChangeData}
                                                                             value={salleForm.numSalle}
@@ -290,7 +290,7 @@ function SalleContent() {
 
                                                                 <div className="col-sm-12">
                                                                     <div className="form-group">
-                                                                        <label>Capacite</label>
+                                                                        <label>Capacité</label>
                                                                         <input
                                                                             onChange={handleChangeData}
                                                                             value={salleForm.capacite}
@@ -311,9 +311,9 @@ function SalleContent() {
                                                                             name="localisation"
                                                                             className="form-select"
                                                                         >
-                                                                            <option value="Ree de chausse">Ree de chausse</option>
-                                                                            <option value="1ere Etage">1ere Etage</option>
-                                                                            <option value="2eme Etage">2eme Etage</option>
+                                                                            <option value="Rée de chaussé">Rée de chaussé</option>
+                                                                            <option value="1ere étage">1ere étage</option>
+                                                                            <option value="2eme étage">2eme étage</option>
 
                                                                         </select>
                                                                     </div>

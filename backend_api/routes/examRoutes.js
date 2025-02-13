@@ -19,7 +19,9 @@ const { CreerInscription,
     getInscriptionEnCoursParEtudiant,
     getInscriptionValideCount,
     getInscription,
-    getAllInscriptions } = require('../controllers/InscriptionController')
+    getAllInscriptions,
+    getInscriptionEtudiantSpecifique,
+    getAllInscriptionParEtudiant } = require('../controllers/InscriptionController')
 
 const router = express.Router();
 
@@ -51,6 +53,8 @@ router.get('/inscriptions/:idExam', getInscription);
 
 router.get('/inscriptions', verifieToken, getInscriptionParEtudiant);
 
+router.get('/inscriptions/all/etudiant', verifieToken, getAllInscriptionParEtudiant);
+
 router.get('/inscriptions/etudiants/all', verifieToken, getAllInscriptions);
 
 router.delete('/inscription/:idInscription', supprimerInscription);
@@ -58,6 +62,8 @@ router.delete('/inscription/:idInscription', supprimerInscription);
 router.delete('/examens/delete/:idExam', supprimeExamen);
 
 router.put('/examens/update/statut/:idExam', annuleExamen);
+
+router.get('/inscriptions/etudiants/info', verifieToken, getInscriptionEtudiantSpecifique);
 
 // router.get('/utilisateur', getUtilisateur);
 

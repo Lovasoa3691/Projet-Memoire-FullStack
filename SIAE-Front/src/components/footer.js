@@ -23,8 +23,9 @@ function Footer() {
                     </ul>
                 </nav>
                 <div className="copyright">
-                    2024, Creer <i className="fa fa-heart heart text-danger"></i> par &nbsp;&nbsp;
-                    <a ><strong>Lova Orion</strong></a>
+                    {/* <i className="fa fa-heart heart text-danger"></i> */}
+                    2024, Créer par &nbsp;&nbsp;
+                    <a ><strong>Juliannot Orion</strong></a>
                 </div>
                 {/* <div>
                     Distribue par 

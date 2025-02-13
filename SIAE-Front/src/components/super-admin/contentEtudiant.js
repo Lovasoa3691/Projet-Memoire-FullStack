@@ -21,7 +21,7 @@ function StudentContent() {
         },
         {
             name: "NOM",
-            selector: row => row.nomEtu,
+            selector: row => (row.nomEtu).toUpperCase(),
             sortable: true,
         },
         {
@@ -256,7 +256,7 @@ function StudentContent() {
 
             <div className="page-inner">
                 <div className="page-header">
-                    <h3 className="fw-bold mb-3">Liste des etudiants</h3>
+                    <h3 className="fw-bold mb-3">Liste des étudiants</h3>
                 </div>
 
 
@@ -294,7 +294,7 @@ function StudentContent() {
                                                 <a className="dropdown-item" onClick={exportCSV}>CSV</a>
                                             </div>
                                         </div>
-                                        &nbsp;&nbsp;&nbsp;
+                                        {/* &nbsp;&nbsp;&nbsp;
                                         <div className="btn btn-label-secondary btn-round btn-sm"
                                             onClick={openFileDialog}>
                                             <span className="btn-label">
@@ -307,7 +307,7 @@ function StudentContent() {
                                                 style={{ display: 'none' }}
                                                 onChange={importFile}
                                             />
-                                        </div>
+                                        </div> */}
                                     </div>
 
                                 </div>

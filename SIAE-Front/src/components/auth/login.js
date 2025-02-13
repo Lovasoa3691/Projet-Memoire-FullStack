@@ -69,7 +69,7 @@ function Login() {
 
                     setTimeout(() => {
                         // setLoading(false);
-                        navigate(utilisateur.role === 'Secretaire' ? '/app/tableau_de_bord' : utilisateur.role === 'Etudiant' ? '/etudiant/dashboard' : '/exam-eazy-app/tableau_de_bord', { replace: true });
+                        navigate(utilisateur.role === 'Responsable' ? '/app/tableau_de_bord' : utilisateur.role === 'Etudiant' ? '/etudiant/dashboard' : '/exam-eazy-app/tableau_de_bord', { replace: true });
                     }, 1000);
 
 
@@ -102,6 +102,13 @@ function Login() {
             })
     }
 
+    const updateAllStudent = () => {
+        api.put('/etudiants/all')
+            .then((rep) => {
+                alert(rep.data.message)
+            })
+    }
+
 
     return (
         <>
@@ -121,7 +128,9 @@ function Login() {
                         <img src={exam} alt="" width="250" height="250" />
                         {/* <h1 className="text-white h3">Connectez-vous</h1> */}
                     </div>
-                    <form className="mt-4" onSubmit={handleConnecting}>
+                    <form className="mt-4"
+                    // onSubmit={updateAllStudent}
+                    >
                         <div className="input-group uf-input-group input-group-lg mb-3">
                             <span className="input-group-text fa fa-user"></span>
                             <input type="text" className="form-control" name="email" value={mail} onChange={e => setMail(e.target.value)} required placeholder="Adresse mail" />
@@ -138,7 +147,7 @@ function Login() {
                             {/* <a>Mot de passe oublie?</a> */}
                         </div>
                         <div className="d-grid mb-4">
-                            <button type="submit" className="btn uf-btn-primary btn-lg">Connecter</button>
+                            <button type="button" onClick={handleConnecting} className="btn uf-btn-primary btn-lg">Connecter</button>
                         </div>
                         {/* <div className="d-flex mb-3">
                             <div className="dropdown-divider m-auto w-25"></div>

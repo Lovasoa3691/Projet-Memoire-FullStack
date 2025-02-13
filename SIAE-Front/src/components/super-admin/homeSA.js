@@ -40,12 +40,7 @@ function Home() {
 
                     <div className="logo-header" data-background-color="dark">
                         <a className="logo">
-                            <img
-                                src="/EXAM.png"
-                                alt="navbar brand"
-                                className="navbar-brand"
-                                height="50"
-                            />
+                            <h3 className='text-white fw-bold'>Exam Eazy</h3>
                         </a>
                         <div className="nav-toggle">
                             <button className="btn btn-toggle toggle-sidebar">

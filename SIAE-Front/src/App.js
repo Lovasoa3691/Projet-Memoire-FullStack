@@ -87,7 +87,7 @@ function App() {
             <Route path='/' element={<Login />}></Route>
             <Route path='/register' element={<Register />}></Route>
             <Route path='/app/*' element={
-              <ProtectRoute role="Secretaire">
+              <ProtectRoute role="Responsable">
                 <HomeAdmin />
               </ProtectRoute>
             } />

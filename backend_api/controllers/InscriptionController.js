@@ -12,9 +12,7 @@ const notificationAdmin = require('../models/notificationAdmin');
 const annee = require('../models/anneeUniversitaire');
 
 async function CreerInscription(req, res) {
-
     try {
-
         const { etudiantId, idExamen, dateExam, descriptionAttendus } = req.body;
 
         if (!etudiantId || !idExamen || !dateExam || descriptionAttendus.length === 0) {
@@ -39,15 +37,15 @@ async function CreerInscription(req, res) {
 
         if (paiementsManquantes.length === 0) {
 
-            const inscriptionExistant = await inscription.findOne({
-                idExam: idExamen,
-            });
+            // const inscriptionExistant = await inscription.findOne({
+            //     idExam: idExamen,
+            // });
 
-            if (inscriptionExistant) {
-                return res.json({
-                    message: "Desole! Vous etes deja inscrit a cet examen."
-                })
-            }
+            // if (inscriptionExistant) {
+            //     return res.json({
+            //         message: "Desole! Vous etes deja inscrit a cet examen."
+            //     })
+            // }
 
             const incrip = new inscription({
                 etudiantMatricule: etudiantId,
@@ -59,17 +57,18 @@ async function CreerInscription(req, res) {
 
             const newNotification = new notification({
                 idNot: idNot,
-                titre: `Nouveau utilisateur inscrit de la session ${exmInfo.codeExam}`,
-                objet: `Etudiant portant la matricule ${etudiantId} est inscrit sur l'examen ${exmInfo.matiere} 
-            de la session ${exmInfo.codeExam} 
-            qui debutera le ${exmInfo.dateExam}.`,
+                titre: "Nouvel étudiant inscrit",
+                objet: `L'étudiant portant le matricule ${etudiantId} est inscrit à l'examen ${exmInfo.matiere} 
+                        de la session ${exmInfo.codeExam} 
+                        qui débutera le ${exmInfo.dateExam}.`,
                 dateEnvoi: new Date()
             })
+
 
             await newNotification.save();
 
             const newNotificationAdmin = new notificationAdmin({
-                idAdmin: exmInfo.adminId,
+                idAdmin: exmInfo.secretaireId,
                 idNot: idNot,
                 dateRecept: new Date()
             });
@@ -83,7 +82,7 @@ async function CreerInscription(req, res) {
                 etuMatricule: etudiantId,
                 dateHisto: new Date(),
                 idHisto: idHisto,
-                motifHisto: `Inscription a l'examen "${exmInfo.matiere}" de la session "${exmInfo.codeExam}"`,
+                motifHisto: `Inscription à l'examen "${exmInfo.matiere}" de la session "${exmInfo.codeExam}"`,
                 statutHisto: "Valide"
             });
 
@@ -91,7 +90,7 @@ async function CreerInscription(req, res) {
 
             return res.json({
                 succes: true,
-                message: "Inscription Valide.",
+                message: "Inscription Validé.",
             });
         }
 
@@ -110,7 +109,7 @@ async function CreerInscription(req, res) {
             etuMatricule: etudiantId,
             dateHisto: new Date(),
             idHisto: idHisto,
-            motifHisto: `Inscription a l'examen "${exmInfo.matiere}" de la session "${exmInfo.codeExam}"`,
+            motifHisto: `Inscription à l'examen "${exmInfo.matiere}" de la session "${exmInfo.codeExam}"`,
             statutHisto: "En attente"
         });
 
@@ -118,12 +117,13 @@ async function CreerInscription(req, res) {
 
         const newNotification = new notification({
             idNot: idNot,
-            titre: `Inscription a l'examen ${exmInfo.matiere}`,
-            objet: `Votre inscription a l'examen ${exmInfo.matiere} 
-                de la session ${exmInfo.codeExam} 
-                est mise en attente du raison que vous n'avez pas 
-                encore regle les frais de formation suivantes: ${paiementsManquantes.join(", ")}`,
-        })
+            titre: `Inscription à l'examen ${exmInfo.matiere}`,
+            objet: `Votre inscription à l'examen ${exmInfo.matiere} 
+                    de la session ${exmInfo.codeExam} 
+                    est mise en attente en raison du fait que vous n'avez pas 
+                    encore réglé les frais de formation suivants : ${paiementsManquantes.join(", ")}`,
+        });
+
 
         await newNotification.save();
 
@@ -137,7 +137,12 @@ async function CreerInscription(req, res) {
 
         return res.json({
             succes: false,
-            message: "Paiement incomplet.",
+            message: "Votre paiement est incomplet. Votre inscription est mise en attente jusqu'à la régularisation.",
+            raisons: [
+                "Certains frais obligatoires n'ont pas encore été réglés.",
+                "Le montant total requis n'a pas encore été atteint.",
+                "Nous avons détecté des paiements partiels, mais ils ne couvrent pas tous les frais."
+            ],
             paiementsManquantes
         });
 
@@ -270,12 +275,66 @@ async function getInscriptionParEtudiant(req, res) {
     }
 }
 
+
+async function getAllInscriptionParEtudiant(req, res) {
+    try {
+        const { email } = req.user;
+
+        const utilisateur = await Utilisateurs.findOne({ email: email });
+
+        if (!utilisateur) {
+            return res.json({
+                erreur: "Utilisateur non trouve"
+            });
+        }
+
+        const etu = await etudiant.findOne({ utilisateur: utilisateur._id });
+
+        if (!etu) {
+            return res.json({
+                erreur: "Etudiant non trouve"
+            });
+        }
+
+        const matriculeEtu = etu.matricule;
+
+        const inscriptions = await inscription.find({ etudiantMatricule: matriculeEtu });
+
+        if (inscriptions.length === 0) {
+            return res.json({
+                message: "Aucun inscription trouve"
+            })
+        }
+
+        const idExamens = inscriptions.map(inscription => inscription.idExam);
+
+        const examens = await examen.find({ idExam: { $in: idExamens } });
+
+        const resultats = examens.map(exam => {
+            const inscriptionAssocie = inscriptions.find(ins => ins.idExam === exam.idExam);
+            return {
+                mon_examen: exam,
+                mon_inscription: inscriptionAssocie
+            };
+        });
+
+        return res.json(resultats);
+
+    } catch (error) {
+        console.log(error);
+        return res.json({
+            message: "Erreur lors de la recuperation de l'inscription"
+        });
+    }
+}
+
+
 async function getInscription(req, res) {
     try {
 
         const { idExam } = req.params;
 
-        const inscriptions = await inscription.find({ idExam: idExam });
+        const inscriptions = await inscription.find({ idExam: idExam, statutIns: 'Valide' });
 
         if (inscriptions.length === 0) {
             return res.json({
@@ -393,7 +452,7 @@ async function supprimerInscription(req, res) {
         }
 
         return res.json({
-            succes: "Inscription supprime avec succes.", inscription: inscriptionSupprime
+            succes: "Inscription supprimé avec succès.", inscription: inscriptionSupprime
         });
     } catch (error) {
         return res.json({
@@ -450,12 +509,50 @@ async function getAllInscriptions(req, res) {
     }
 }
 
+async function getInscriptionEtudiantSpecifique(req, res) {
+    const { email } = req.user;
+
+    const utilisateur = await Utilisateurs.findOne({ email: email });
+    if (!email) {
+        return res.json({
+            message: "Utilisateur pas trouve"
+        })
+    }
+
+    const etu = utilisateur.id_ut;
+
+    const anneeActive = await annee.findOne({ statutAnnee: 'Active' });
+
+    const etuMatricule = await etudiant.findOne({ matricule: etu, idAnnee: anneeActive.idAnnee });
+
+    // if (!etuMatricule) {
+    //     console.log(etuMatricule);
+    // }
+
+    const inscriptions = await inscription.find({ etudiantMatricule: etuMatricule.matricule, statutIns: 'Valide' })
+
+    const inscriptionsWithExams = await Promise.all(
+        inscriptions.map(async (ins) => {
+            // Récupérez tous les examens associés
+            const exams = await examen.find({ idExam: { $in: ins.idExam }, statut: 'En cours' });
+            // Stockez les examens dans un tableau
+            ins.examDetails = exams;
+            return { ...ins.toObject(), etuMatricule, examDetails: ins.examDetails };
+        })
+    );
+
+    return res.json(inscriptionsWithExams)
+
+}
+
 module.exports = {
     CreerInscription,
     getInscriptionEnCoursParEtudiant,
     getInscriptionParEtudiant,
+    getAllInscriptionParEtudiant,
     supprimerInscription,
     getInscriptionValideCount,
     getInscription,
-    getAllInscriptions
+    getAllInscriptions,
+    getInscriptionEtudiantSpecifique
 };

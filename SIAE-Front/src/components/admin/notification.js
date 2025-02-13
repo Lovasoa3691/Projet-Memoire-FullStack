@@ -90,8 +90,8 @@ function NotificationContent() {
 
     const deleteNotification = (idNot) => {
         swal({
-            title: "Etes-vous sur?",
-            text: "Une fois supprime, vous ne pourrez plus recuperer ce fichier !",
+            title: "Etes-vous sûr?",
+            text: "Une fois supprimé, vous ne pourrez plus récuperer cet information !",
             icon: "warning",
             buttons: {
                 confirm: {
@@ -201,7 +201,7 @@ function NotificationContent() {
                                     )
                                     )
                                 ) : (
-                                    <div className="text-center">Aucun nouvelles notifications trouvees</div>
+                                    <div className="text-center">Aucune nouvelle notification trouvée</div>
                                 )
 
                             }

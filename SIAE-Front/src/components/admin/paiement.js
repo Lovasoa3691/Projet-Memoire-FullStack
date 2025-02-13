@@ -3,6 +3,11 @@ import Select from 'react-select';
 import axios from 'axios';
 import api from '../API/api';
 import swal from 'sweetalert';
+import { createRoot } from 'react-dom/client';
+import Recu from '../etudiant/recuPaiement';
+import html2pdf from 'html2pdf.js';
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/ReactToastify.css'
 
 function PaiementContent() {
 
@@ -15,7 +20,7 @@ function PaiementContent() {
     const [donneeFiltre, setDonneFiltre] = useState([]);
 
     const [paiementForm, setPaiementForm] = useState({
-        montant: '', typePaie: '', descriptionPaie: [], etudiantId: ''
+        montant: '', typePaie: '', descriptionPaie: [], etudiantId: '', nom: '', prenom: ''
     });
 
     const [total, setTotal] = useState(0);
@@ -23,17 +28,6 @@ function PaiementContent() {
     const [selectedEtudiant, setSelectedEtudiant] = useState(null);
 
     const [showModa, setShowModal] = useState(false);
-
-    useEffect(() => {
-        chargerPaiements();
-    }, []);
-
-
-    useEffect(() => {
-        chargerEtudiants();
-    }, []);
-
-
 
     const formatDate = (dateHisto) => {
         const current = new Date(dateHisto);
@@ -62,24 +56,67 @@ function PaiementContent() {
     const chargerPaiements = () => {
         api.get('/paiements')
             .then((rep) => {
-
                 const uniquePaiements = rep.data.paiements.reduce((acc, paiement) => {
                     const etudiant = acc.find(p => p.etudiantId === paiement.etudiantId);
                     if (etudiant) {
+                        // if (!etudiant.descriptions.includes(paiement.descriptionPaie)) {
+                        //     etudiant.descriptions.push(paiement.descriptionPaie);
+                        // }
+                        // paiement.descriptionPaie.forEach(desc => {
+                        //     // Aplatir les descriptions et vérifier si elles sont déjà présentes
+                        //     desc.forEach(subDesc => {
+                        //         if (!etudiant.descriptions.includes(subDesc)) {
+                        //             etudiant.descriptions.push(subDesc);
+                        //         }
+                        //     });
+                        // });
+                        // etudiant.montantTotal += Number(paiement.montant);
+
+                        paiement.descriptionPaie.forEach(desc => {
+                            if (Array.isArray(desc)) {
+                                // Si desc est un tableau, fusionner ses éléments
+                                desc.forEach(subDesc => {
+                                    if (!etudiant.descriptions.includes(subDesc)) {
+                                        etudiant.descriptions.push(subDesc);
+                                    }
+                                });
+                            } else {
+                                // Si desc n'est pas un tableau, l'ajouter directement
+                                if (!etudiant.descriptions.includes(desc)) {
+                                    etudiant.descriptions.push(desc);
+                                }
+                            }
+                        });
                         etudiant.montantTotal += Number(paiement.montant);
                     } else {
+                        // acc.push({
+                        //     etudiantId: paiement.etudiantId,
+                        //     datePaie: paiement.datePaie,
+                        //     montantTotal: Number(paiement.montant),
+                        //     descriptions: [...paiement.descriptionPaie]
+                        // });
+                        const flattenedDescriptions = paiement.descriptionPaie.flat(); // Aplatir les descriptions
                         acc.push({
                             etudiantId: paiement.etudiantId,
                             datePaie: paiement.datePaie,
-                            montantTotal: Number(paiement.montant)
+                            montantTotal: Number(paiement.montant),
+                            descriptions: flattenedDescriptions // Utilisation des descriptions aplaties
                         });
                     }
                     return acc;
                 }, []);
 
+                const descriptionsRequises = ["FF1", "FF2", "FF3", "FF4", "FF5", "FF6", "FF7", "FF8", "FF9", "FF10"];
 
-                setpaieData(uniquePaiements);
+                const paiementsAvecStatut = uniquePaiements.map(p => {
+                    const estComplet = descriptionsRequises.every(desc => p.descriptions.includes(desc));
+                    return {
+                        ...p,
+                        statut: estComplet ? "Complet" : "En cours"
+                    };
+                });
 
+                setpaieData(paiementsAvecStatut);
 
                 const total = uniquePaiements.reduce((sum, etudiant) => sum + etudiant.montantTotal, 0);
                 setTotal(total);
@@ -88,6 +125,89 @@ function PaiementContent() {
                 console.log(error.message);
             });
     };
+
+    useEffect(() => {
+        chargerPaiements();
+        console.log(paieData);
+    }, []);
+
+
+    useEffect(() => {
+        chargerEtudiants();
+    }, []);
+
+
+    // const chargerPaiements = () => {
+    //     api.get('/paiements')
+    //         .then((rep) => {
+
+    //             const uniquePaiements = rep.data.paiements.reduce((acc, paiement) => {
+    //                 const etudiant = acc.find(p => p.etudiantId === paiement.etudiantId);
+    //                 if (etudiant) {
+    //                     etudiant.montantTotal += Number(paiement.montant);
+    //                 } else {
+    //                     acc.push({
+    //                         etudiantId: paiement.etudiantId,
+    //                         datePaie: paiement.datePaie,
+    //                         montantTotal: Number(paiement.montant)
+    //                     });
+    //                 }
+    //                 return acc;
+    //             }, []);
+
+    //             setpaieData(uniquePaiements);
+
+
+    //             const total = uniquePaiements.reduce((sum, etudiant) => sum + etudiant.montantTotal, 0);
+    //             setTotal(total);
+    //         })
+    //         .catch((error) => {
+    //             console.log(error.message);
+    //         });
+    // };
+
+    // const chargerPaiements = () => {
+    //     api.get('/paiements')
+    //         .then((rep) => {
+    //             // Définition des frais attendus
+    //             const fraisAttendus = ["FF1", "FF2", "FF3", "FF4", "FF5", "FF6", "FF7", "FF8", "FF9", "FF10"];
+
+    //             // Regrouper les paiements par étudiant
+    //             const uniquePaiements = rep.data.paiements.reduce((acc, paiement) => {
+    //                 const etudiant = acc.find(p => p.etudiantId === paiement.etudiantId);
+    //                 if (etudiant) {
+    //                     etudiant.montantTotal += Number(paiement.montant);
+    //                     etudiant.fraisPaye.push(paiement.descriptionPaie); // Stocke la description
+    //                 } else {
+    //                     acc.push({
+    //                         etudiantId: paiement.etudiantId,
+    //                         datePaie: paiement.datePaie,
+    //                         montantTotal: Number(paiement.montant),
+    //                         fraisPaye: [paiement.descriptionPaie] // Stocke la description
+    //                     });
+    //                 }
+    //                 return acc;
+    //             }, []);
+
+    //             // Vérification des frais FF1 - FF10
+    //             uniquePaiements.forEach(etudiant => {
+    //                 const fraisPaye = etudiant.fraisPaye.join(" "); // Regroupe toutes les descriptions en une seule chaîne
+    //                 const fraisManquants = fraisAttendus.filter(frais => !fraisPaye.includes(frais));
+
+    //                 etudiant.fraisComplets = fraisManquants.length === 0;
+    //                 etudiant.fraisManquants = fraisManquants; // Stocke les frais manquants
+    //             });
+
+    //             setpaieData(uniquePaiements);
+
+    //             const total = uniquePaiements.reduce((sum, etudiant) => sum + etudiant.montantTotal, 0);
+    //             setTotal(total);
+    //         })
+    //         .catch((error) => {
+    //             console.log(error.message);
+    //         });
+    // };
+
 
     const afficherDetails = (etudiantId) => {
 
@@ -122,7 +242,16 @@ function PaiementContent() {
 
     const handleChangeData = (e) => {
         const { name, value } = e.target;
-        setPaiementForm({ ...paiementForm, [name]: value });
+        const etudiantSelectionne = donneeFiltre.find(item => item.matricule === value);
+
+        setPaiementForm(prevState => ({
+            ...prevState,
+            [name]: value,
+            nom: etudiantSelectionne ? etudiantSelectionne.nomEtu : "",
+            prenom: etudiantSelectionne ? etudiantSelectionne.prenomEtu : ""
+        }));
+
+        // console.log(paiementForm.nom);
     }
 
 
@@ -149,7 +278,6 @@ function PaiementContent() {
             (!mention || item.mention === mention.value) &&
             (!niveau || item.niveau === niveau.value)
         )
-
         setDonneFiltre(filtered);
     }
 
@@ -164,6 +292,7 @@ function PaiementContent() {
     }
 
     const openModal = () => {
+        viderChamp()
         setVisible(true);
     }
 
@@ -171,18 +300,49 @@ function PaiementContent() {
         setVisible(false);
     }
 
+
     const handleCheckChangeFinal = (value) => {
+        // Déterminer le montant en fonction du niveau sélectionné
+        let montantActuel;
+        switch (selectedNiveau?.value) {
+            case "L1": montantActuel = 50000; break;
+            case "L2": montantActuel = 65000; break;
+            case "L3": montantActuel = 80000; break;
+            case "M1": montantActuel = 100000; break;
+            default: montantActuel = 130000; break;
+        }
+
+        // Mettre à jour l'état du paiement
         setPaiementForm((prev) => {
-            const updatedPaie = prev.descriptionPaie.includes(value) ?
-                prev.descriptionPaie.filter((item) => item !== value)
+            const updatedPaie = prev.descriptionPaie.includes(value)
+                ? prev.descriptionPaie.filter((item) => item !== value)
                 : [...prev.descriptionPaie, value];
-            return { ...prev, descriptionPaie: updatedPaie };
+
+            return {
+                ...prev,
+                descriptionPaie: updatedPaie,
+                montant: montantActuel * updatedPaie.length, // Mettre à jour après modification
+            };
         });
+    };
+
+    const formatDate1 = (dateString) => {
+        const date = new Date(dateString); // Conversion si nécessaire
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Mois commence à 0
+        const day = String(date.getDate()).padStart(2, '0');
+        const hour = String(date.getHours());
+        const min = String(date.getMinutes());
+        const sec = String(date.getSeconds());
+        return `${year}/${month}/${day} ${hour}:${min}:${sec}`;
     }
 
-    const savePaiement = (e) => {
-        e.preventDefault();
+    const [isLoading, setIsLoading] = useState(false);
+
+    const savePaiement = () => {
+        // e.preventDefault();
         try {
+            // imprimerRecu();
             api.post('/paiements/save', paiementForm)
                 .then((rep) => {
                     // console.log(rep.data.message)
@@ -195,6 +355,7 @@ function PaiementContent() {
                     },
                     )
                     chargerPaiements();
+                    imprimerRecu();
                 })
                 .catch((err) => {
                     console.log(err.message)
@@ -204,8 +365,205 @@ function PaiementContent() {
         }
     }
 
+    const imprimerRecu = async () => {
+        const paiementData = {
+            nom: paiementForm.nom,
+            prenom: paiementForm.prenom,
+            montant: paiementForm.montant,
+            mention: selectedMention.value,
+            descriptionPaie: paiementForm.descriptionPaie,
+            niveau: selectedNiveau.value,
+        };
+
+        setIsLoading(true);
+
+        const div = document.createElement("div");
+        document.body.appendChild(div);
+
+        const root = createRoot(div);
+        root.render(<Recu {...paiementData} />);
+
+        const date = formatDate1(Date.now()).replace(/[:]/g, "-");
+        const fichier = `recu_${date}.pdf`;
+
+        try {
+            const opt = {
+                margin: 1,
+                filename: fichier,
+                html2canvas: {
+                    scale: 2,
+                    logging: true,
+                    useCORS: true,
+                },
+                jsPDF: {
+                    unit: "mm",
+                    format: "a4",
+                    orientation: "portrait",
+                },
+            };
+
+            // Attendre un peu pour que le rendu React soit terminé
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+
+            const pdfBlob = await html2pdf().from(div).set(opt).outputPdf("blob");
+
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+            const a = document.createElement("a");
+            a.href = pdfUrl;
+            a.download = fichier;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(pdfUrl);
+
+            // console.log(paiementForm.nom);
+            // Nettoyage
+            root.unmount();
+            document.body.removeChild(div);
+
+            setIsLoading(false);
+
+            await envoyerPDF(pdfBlob, fichier);
+
+
+        } catch (error) {
+            console.error("Erreur lors de la génération du PDF :", error);
+            setIsLoading(false);
+        }
+    };
+
+
+    const envoyerPDF = async (pdfBlob, filename) => {
+        const formData = new FormData();
+
+        // Convertir le Blob en File (nécessaire pour Multer)
+        const file = new File([pdfBlob], filename, { type: "application/pdf" });
+
+        formData.append("file", file);
+        formData.append("email", "fenonantenaikolovasoa@gmail.com");
+
+        try {
+            const response = await api.post("/paiement/recu", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+
+            // alert(response.data.message);
+            // console.log(response.data.message)
+            toast.success(response.data.message, {
+                position: 'top-right',
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true
+            });
+
+        } catch (error) {
+            console.error("Erreur lors de l'envoi du PDF :", error);
+            toast.error("Erreur lors de l'envoi de l'email", {
+                position: 'top-right',
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true
+            });
+            // alert("Erreur lors de l'envoi de l'email.");
+        }
+    };
+
+    const showToast = () => {
+        toast.success("Reçu envoié avec succès", {
+            position: 'top-right',
+            autoClose: 4000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true
+        });
+    }
+
+
+    const deletPaiement = (id) => {
+        swal({
+            title: "Etes-vous sûr?",
+            text: "Une fois supprimé, cette information ne pourra pas être récupérée !",
+            icon: "warning",
+            buttons: {
+                confirm: {
+                    text: "Oui",
+                    className: "btn btn-success",
+                },
+                cancel: {
+                    text: "Non",
+                    visible: true,
+                    className: "btn btn-danger"
+                }
+            },
+            // dangerMode: true,
+        }).then((willDelete) => {
+            if (willDelete) {
+                api.delete(`/paiement/delete/${id}`)
+                    .then((rep) => {
+                        swal(`${rep.data.message}`, {
+                            icon: "success",
+                            buttons: false,
+                            timer: 1500,
+                        });
+                        chargerPaiements();
+                    })
+                    .catch((err) => {
+                        console.log(err.message)
+                    })
+            }
+        });
+
+    }
+
+    const [fraisPayes, setFraisPayes] = useState([]); // Frais déjà payés par l'étudiant
+
+    useEffect(() => {
+        const fetchFraisPayes = async () => {
+            console.log(paiementForm.etudiantId)
+            try {
+                api.get(`/paiements/etudiant/${paiementForm.etudiantId}`)
+                    .then((rep) => {
+                        // console.log(rep.data)
+                        setFraisPayes(rep.data)
+                    })
+                    .catch((error) => {
+                        console.error("Erreur de récupération des frais :", error.message);
+                    })
+
+            } catch (error) {
+                console.error("Erreur réseau :", error);
+            }
+        };
+
+        if (paiementForm.etudiantId) {
+            fetchFraisPayes();
+        }
+    }, [paiementForm.etudiantId]);
+
+    const viderChamp = () => {
+        setPaiementForm({
+            montant: '',
+            typePaie: '',
+            descriptionPaie: [],
+            etudiantId: '',
+            nom: '',
+            prenom: ''
+        });
+        setFraisFormation(generateMentions(["FF"], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
+        setSelectedMention(null);
+        setSelectedNiveau(null);
+    };
+
+
     return (
         <div className="container">
+            <ToastContainer />
 
             <div className="page-inner">
                 <div className="page-header">
@@ -224,7 +582,7 @@ function PaiementContent() {
                                         onClick={openModal}
                                     >
                                         <i className="fa fa-plus">&nbsp;&nbsp;</i>
-                                        Nouveau Paiement
+                                        Nouveau paiement
                                     </button>
                                 </div>
                             </div>
@@ -240,13 +598,15 @@ function PaiementContent() {
                                             role="dialog"
                                         // aria-hidden="true"
                                         >
-                                            <form onSubmit={savePaiement}>
+                                            <form
+                                            // onSubmit={imprimerRecu}
+                                            >
                                                 <div className="modal-dialog" role="document">
                                                     <div className="modal-content">
                                                         <div className="modal-header border-0">
                                                             <h5 className="modal-title">
-                                                                <span className="fw-mediumbold"> Nouvelle</span>
-                                                                <span className="fw-light"> Enregistrement </span>
+                                                                <span className="fw-mediumbold"> Nouvel</span>
+                                                                <span className="fw-light"> enregistrement </span>
                                                             </h5>
                                                             <i className='fas fa-times fa-2x' onClick={closeModal}></i>
                                                         </div>
@@ -260,7 +620,7 @@ function PaiementContent() {
                                                                     <div className="form-group">
                                                                         <label>Filtre</label>
                                                                         <div className="row">
-                                                                            <di className="col-sm-6">
+                                                                            <div className="col-sm-6">
                                                                                 <Select
                                                                                     options={mentionOptions}
                                                                                     placeholder="Mention"
@@ -268,8 +628,8 @@ function PaiementContent() {
                                                                                     onChange={handleMentionChange}
                                                                                     isClearable
                                                                                 />
-                                                                            </di>
-                                                                            <di className="col-sm-6">
+                                                                            </div>
+                                                                            <div className="col-sm-6">
                                                                                 <Select
                                                                                     options={niveauOptions}
                                                                                     placeholder="Niveau"
@@ -277,48 +637,37 @@ function PaiementContent() {
                                                                                     onChange={handleNiveauChange}
                                                                                     isClearable
                                                                                 />
-                                                                            </di>
+                                                                            </div>
                                                                         </div>
 
                                                                     </div>
                                                                 </div>
                                                                 <div className="col-sm-12">
                                                                     <div className="form-group">
-                                                                        <label>Nom et Prenom de l'etudiant</label>
+                                                                        <label>Nom et Prenom de l'étudiant</label>
                                                                         <select name='etudiantId'
                                                                             className="form-select"
                                                                             value={paiementForm.etudiantId}
                                                                             onChange={handleChangeData}
                                                                         >
-                                                                            <option>Choisir...</option>
+                                                                            {/* <option>Choisir...</option> */}
                                                                             {
                                                                                 donneeFiltre && donneeFiltre.map(item => (
-                                                                                    <option value={item.matricule}>{item.nomEtu} {item.prenomEtu}</option>
+                                                                                    <option key={item.matricule} value={item.matricule}><strong>{(item.matricule)}</strong> {(item.nomEtu).toUpperCase()} {item.prenomEtu}</option>
                                                                                 ))
                                                                             }
                                                                         </select>
-
-
                                                                     </div>
                                                                 </div>
-                                                                {/* <div className="col-sm-12">
-                                                                    <div className="form-group">
-                                                                        <label>Type de paiement</label>
-                                                                        <select name='typePaie'
-                                                                            className="form-select"
-                                                                            value={paiementForm.typePaie}
-                                                                            onChange={handleChangeData}
-                                                                        >
-                                                                            <option value="Frais de formation">Frais de formation</option>
-                                                                        </select>
-                                                                    </div>
-                                                                </div> */}
+
+
                                                                 <div className="col-md-12">
                                                                     <div className="form-group">
                                                                         <label className="form-label">Description</label>
                                                                         <div className="selectgroup selectgroup-pills">
-                                                                            {
-                                                                                fraisFormation && fraisFormation.map(item => (
+                                                                            {fraisFormation && fraisFormation.map(item => {
+                                                                                const isPaid = fraisPayes.includes(item.code);
+                                                                                return (
                                                                                     <label className="selectgroup-item" key={item.code}>
                                                                                         <input
                                                                                             onChange={() => handleCheckChangeFinal(item.code)}
@@ -327,18 +676,22 @@ function PaiementContent() {
                                                                                             value={item.code}
                                                                                             className="selectgroup-input"
                                                                                             checked={paiementForm.descriptionPaie.includes(item.code)}
+                                                                                            disabled={isPaid}
                                                                                         />
-                                                                                        <span className="selectgroup-button">{item.code}</span>
+                                                                                        <span className={`selectgroup-button ${isPaid ? "btn-success text-white" : ""}`}>
+                                                                                            {item.code}
+                                                                                        </span>
                                                                                     </label>
-                                                                                )
-                                                                                )}
+                                                                                );
+                                                                            })}
+
 
                                                                         </div>
                                                                     </div>
                                                                 </div>
                                                                 <div className="col-sm-12">
                                                                     <div className="form-group">
-                                                                        <label>Montant a paye</label>
+                                                                        <label>Montant à paye</label>
                                                                         <div className="input-group mb-3">
                                                                             <span className="input-group-text">Ar</span>
                                                                             <input
@@ -358,17 +711,18 @@ function PaiementContent() {
                                                         </div>
                                                         <div className="modal-footer border-0">
                                                             <button
-                                                                type="submit"
-                                                                className="btn btn-success"
-
+                                                                type="button"
+                                                                className="btn btn-success btn-outer"
+                                                                onClick={savePaiement}
+                                                                disabled={isLoading}
                                                             >
                                                                 Enregistrer
                                                             </button>
                                                             <button
                                                                 type="button"
                                                                 className="btn btn-danger"
-                                                                data-dismiss="modal"
                                                                 onClick={closeModal}
+                                                                disabled={isLoading}
                                                             >
                                                                 Fermer
                                                             </button>
@@ -399,7 +753,7 @@ function PaiementContent() {
                                                 <table className="table align-items-center mb-0">
                                                     <thead className="thead-light">
                                                         <tr>
-                                                            <th scope="col">Numero de paiement</th>
+                                                            <th scope="col">Numéro de paiement</th>
                                                             <th scope="col" className="text-end">Date et Heure</th>
                                                             <th scope="col" className="text-end">Montant Total</th>
                                                             <th scope="col" className="text-end">Status</th>
@@ -410,22 +764,46 @@ function PaiementContent() {
 
                                                         {
                                                             paieData && paieData.map(item => (
-                                                                <tr key={item.idPaie}>
+                                                                <tr key={item.etudiantId}>
                                                                     <th scope="row">
-                                                                        <button
+                                                                        {item.statut === "Complet" ? (
+                                                                            <button
+                                                                                className="btn btn-icon btn-round btn-success btn-sm me-2"
+                                                                            >
+                                                                                <i className="fa fa-check text-white"></i>
+                                                                            </button>
+                                                                        ) : (
+                                                                            <button
+                                                                                className="btn btn-icon btn-round btn-warning btn-sm me-2"
+                                                                            >
+                                                                                <i className="fa fa-hourglass-half text-white"></i>
+                                                                            </button>
+                                                                        )}
+                                                                        {/* <button
                                                                             className="btn btn-icon btn-round btn-success btn-sm me-2"
                                                                         >
                                                                             <i className="fa fa-check"></i>
-                                                                        </button>
-                                                                        Paiement de la part de l'etudiant {item.etudiantId}
+                                                                        </button> */}
+                                                                        Paiement de la part de l'étudiant {item.etudiantId}
                                                                     </th>
                                                                     <td className="text-end">{formatDate(item.datePaie)}</td>
-                                                                    <td className="text-end">{item.montantTotal} Ariary</td>
+                                                                    <td className="text-end">{(item.montantTotal).toLocaleString("fr-FR", { style: 'currency', currency: 'MGA' })}</td>
                                                                     <td className="text-end">
-                                                                        <span className="badge badge-success">Complet</span>
+                                                                        {item.statut === "Complet" ? (
+                                                                            <span className="badge badge-success text-white">Complet</span>
+                                                                        ) : (
+                                                                            <span className="badge badge-warning text-white">
+                                                                                En cours
+                                                                            </span>
+                                                                        )}
+
                                                                     </td>
                                                                     <td className="text-center">
                                                                         <i className="fas fa-archive fa-2x" title='Voir details' onClick={() => afficherDetails(item.etudiantId)}></i>
+                                                                        &nbsp;&nbsp;&nbsp;
+                                                                        <i className="fas fa-times fa-2x text-danger" title='Supprimer'
+                                                                            onClick={() => deletPaiement(item.etudiantId)}
+                                                                        ></i>
                                                                     </td>
                                                                 </tr>
                                                             ))
@@ -451,7 +829,7 @@ function PaiementContent() {
 
 
                                                     <div className="modal-header">
-                                                        <h4 className="modal-title">Details du paiement pour l'etudiant {selectedEtudiant[0].etudiantId}</h4>
+                                                        <h4 className="modal-title">Details du paiement pour l'étudiant {selectedEtudiant[0].etudiantId}</h4>
                                                         <button type="button" className="btn-close" onClick={fermerModal} ></button>
                                                     </div>
 

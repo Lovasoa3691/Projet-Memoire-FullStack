@@ -4,6 +4,8 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import Login from "../auth/login";
 import swal from "sweetalert";
 import api from "../API/api";
+// import { loadStripe } from "@stripe/stripe-js";
+// import { Elements, useStripe, useElements, cardElement } from "@stripe/react-stripe-js"
 
 function TopNavBar() {
 
@@ -140,7 +142,26 @@ function TopNavBar() {
             fin: endYear
         })
             .then((rep) => {
-                console.log(rep.data)
+                // console.log(rep.data)
+                if (rep.data.succes) {
+                    swal({
+                        text: `Année crée avec succès !`,
+                        icon: "success",
+                        buttons: false,
+                        timer: 1500
+                    },
+                    )
+                    setVisible(false)
+                } else {
+                    swal({
+                        text: `Cet année existe déjà !`,
+                        icon: "error",
+                        buttons: false,
+                        timer: 1500
+                    },
+                    )
+                    // setVisible(false)
+                }
                 chargerAnneeUniv();
             })
     }
@@ -182,6 +203,71 @@ function TopNavBar() {
             })
     }
 
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [amount, setAmount] = useState('');
+    const [message, setMessage] = useState('');
+
+    const savePaiement = async () => {
+        try {
+            // Obtenir le token
+            // const tokenResponse = api.post('/mvola/token');
+            // const token = tokenResponse.data;
+
+            // console.log(token);
+
+            await api.post('/mvola/token')
+                .then((rep) => {
+                    console.log(rep.data)
+                })
+            // const token = "eyJ4NXQiOiJOMkpqTWpOaU0yRXhZalJrTnpaalptWTFZVEF4Tm1GbE5qZzRPV1UxWVdRMll6YzFObVk1TlEiLCJraWQiOiJNREpsTmpJeE4yRTFPR1psT0dWbU1HUXhPVEZsTXpCbU5tRmpaalEwWTJZd09HWTBOMkkwWXpFNFl6WmpOalJoWW1SbU1tUTBPRGRpTkRoak1HRXdNQV9SUzI1NiIsInR5cCI6ImF0K2p3dCIsImFsZyI6IlJTMjU2In0";
+
+            // Effectuer le paiement
+            // const paymentResponse = await api.post('/mvola/payment', {
+            //     phoneNumber: "0345416063",
+            //     amount: "10000",
+            //     token
+            // });
+
+            // console.log(`Paiement réussi ! Transaction ID : ${paymentResponse.data.transactionId}`)
+
+            // setMessage(`Paiement réussi ! Transaction ID : ${paymentResponse.data.transactionId}`);
+        } catch (error) {
+            setMessage('Erreur lors du paiement');
+        }
+    };
+
+    // const stripe = useStripe();
+    // const elements = useElements();
+    // const [loading, setLoading] = useState(false);
+    // const [message, setMessage] = useState("");
+
+    // const stripePromise = loadStripe("pk_test_51QpVW4Rj5MZZFLXmBSbXHmfCUM9tdSjIV0F7xFTC1eJYIQbh1JdNzqKr2vTfNHcP2qlHI4gESKVmMK3nyjcol8se00W45hhY89")
+
+    // const stripePaiement = async (e) => {
+    //     // e.preventDefault();
+    //     setLoading(true);
+
+    //     const { data } = api.post("/stripe/payment", {
+    //         amount: 1000, // Montant en centimes (10.00€)
+    //         currency: "Ar",
+    //     });
+
+    //     const { clientSecret } = data;
+    //     const result = await stripe.confirmCardPayment(clientSecret, {
+    //         payment_method: { card: elements.getElement(cardElement) },
+    //     });
+
+    //     if (result.error) {
+    //         setMessage(result.error.message);
+    //         console.log(result.error.message);
+    //     } else if (result.paymentIntent.status === "succeeded") {
+    //         setMessage("Paiement réussi !");
+    //         console.log("Paiement reussi !");
+    //     }
+
+    //     setLoading(false);
+    // };
+
     return (
         <div className="main-header">
             <div className="main-header-logo">
@@ -214,13 +300,13 @@ function TopNavBar() {
                         role="dialog"
 
                     >
-                        <form onSubmit={updateAll}>
+                        <form onSubmit={saveAnnee}>
                             <div className="modal-dialog" role="document">
                                 <div className="modal-content">
                                     <div className="modal-header border-0">
                                         <h5 className="modal-title">
                                             <span className="fw-mediumbold"> Nouvelle</span>
-                                            <span className="fw-light"> Annee Universitaire </span>
+                                            <span className="fw-light"> année universitaire </span>
                                         </h5>
                                         <i className='fas fa-times fa-2x text-danger' onClick={closeModal}></i>
                                     </div>
@@ -263,7 +349,8 @@ function TopNavBar() {
                                     </div>
                                     <div className="modal-footer border-0">
                                         <button
-                                            type="submit"
+                                            onClick={saveAnnee}
+                                            type="button"
                                             className="btn btn-success"
                                         >
                                             <i className='fas fa-save'></i> &nbsp;&nbsp;

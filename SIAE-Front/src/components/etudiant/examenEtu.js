@@ -1,8 +1,12 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import swal from 'sweetalert';
 import NProgress from 'nprogress';
 import api from '../API/api';
 import { Navigate, useNavigate } from 'react-router-dom';
+import html2pdf from 'html2pdf.js';
+import { createRoot } from 'react-dom/client'
+import Convocation from './convocation';
+import Recu from './recuPaiement';
 
 function ExamenContent() {
 
@@ -11,6 +15,13 @@ function ExamenContent() {
     const [descriptionAttendusData, setDescriptionsAttendusData] = useState([]);
 
     const navigate = useNavigate();
+
+    const verifierPaiementEtudiant = () => {
+        api.put('/paiements/en-attente/verification')
+            .then((rep) => {
+                console.log(rep.data)
+            })
+    }
 
     const chargerExamenDispo = () => {
         api.get('/examens')
@@ -36,26 +47,22 @@ function ExamenContent() {
 
     useEffect(() => {
         chargerExamenDispo();
+        verifierPaiementEtudiant();
+        const timer = setInterval(() => {
+            verifierPaiementEtudiant();
+        }, 5000);
+
+        return () => clearInterval(timer);
     }, []);
 
+    // useEffect(() => {
+    //     verifierPaiementEtudiant();
+    //     const timer = setInterval(() => {
+    //         verifierPaiementEtudiant();
+    //     }, 60000);
 
-    const showMessage = () => {
-
-        swal({
-            title: "Information",
-            text: "Aucun examen disponible pour le moment. Nous vous enverrons des notifications quand il aura des nouvelles sessions examens disponible.\n Merci pour votre attention",
-            icon: "info",
-            buttons: {
-                confirm: {
-                    className: "btn btn-success",
-                },
-            },
-        }).then((willConfirm) => {
-            if (willConfirm) {
-                navigate('/etudiant/dashboard', { replace: true })
-            }
-        });
-    };
+    //     return () => clearInterval(timer);
+    // }, []);
 
     const handleInscription = async (etudiantId, idExamen, dateExam, codeExam) => {
         try {
@@ -71,14 +78,14 @@ function ExamenContent() {
 
             setTimeout(() => {
                 console.log(descriptionAttendus)
-            }, 1000)
+            }, 800)
 
             const rep = await api.post('/inscrire', {
                 etudiantId, idExamen, dateExam, descriptionAttendus
             });
 
             swal({
-                title: "Verification en cours...",
+                title: "Vérification en cours...",
                 text: "Veuillez patienter s'il vous plait.",
                 buttons: false,
                 closeOnClickOutside: false,
@@ -87,9 +94,9 @@ function ExamenContent() {
             setTimeout(() => {
                 NProgress.done();
                 if (rep.data.succes) {
-                    swal("Termine!", rep.data.message, "success");
+                    swal("Terminé!", rep.data.message, "success");
                 } else {
-                    swal("Erreur!", rep.data.message, "error");
+                    swal("Erreur!", rep.data.message, "warning");
                     console.log(rep.data.paiementsManquantes)
                 }
                 chargerExamenDispo();
@@ -107,12 +114,118 @@ function ExamenContent() {
         return `${year}/${month}/${day}`;
     }
 
+    const printPDF = useRef();
+    const [visible, setVisible] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [etuInfo, setEtuInfo] = useState(null);
+    const [examens, setExamens] = useState(null);
+
+
+    const chargerInfoEtudiant = () => {
+        api.get('/inscriptions/etudiants/info')
+            .then((rep) => {
+                const rawData = rep.data;
+                if (rawData.length > 0) {
+                    const etudiants = rawData[0];
+
+                    const etudiantInfo = {
+                        matricule: etudiants.etuMatricule.matricule,
+                        nom: etudiants.etuMatricule.nomEtu,
+                        prenom: etudiants.etuMatricule.prenomEtu,
+                        phone: etudiants.etuMatricule.contactEtu,
+                        mention: etudiants.etuMatricule.mention,
+                        niveau: etudiants.etuMatricule.niveau,
+                    }
+
+                    const examens = rawData.flatMap(etudiant =>
+                        etudiant.examDetails.map(exam => ({
+                            dateExam: exam.dateExam,
+                            matiere: exam.matiere,
+                            // duree: exam.duree, // Correction ici, au lieu de `codeExam`
+                            heureDebut: exam.heureDebut,
+                            heureFin: exam.heureFin
+                        }))
+                    )
+                    // console.log(examens);
+                    setEtuInfo({ ...etudiantInfo, examens });
+                    setExamens(examens);
+                }
+            })
+            .catch((error) => {
+                console.log("Erreur lors de la recuperation: ", error.message);
+            })
+    }
+
+    useEffect(() => {
+        chargerInfoEtudiant();
+        // console.log(examens);
+    }, [etuInfo])
+
+
+
+    const generatePDF = () => {
+        setIsLoading(true);
+        const div = document.createElement('div');
+        document.body.appendChild(div);
+
+        const root = createRoot(div);
+        root.render(<Convocation {...etuInfo} />);
+
+        setTimeout(() => {
+
+            const opt = {
+                margin: 1,
+                filename: `convocation_${etuInfo.matricule}.pdf`,
+                html2canvas: {
+                    scale: 2,
+                    logging: true,  // Activer la journalisation pour mieux comprendre ce qui se passe
+                    useCORS: true,  // Autoriser le CORS pour les images externes
+                },
+                jsPDF: {
+                    unit: 'mm',
+                    format: 'a4',
+                    orientation: 'portrait',
+                },
+            };
+
+            // Générer le PDF
+            html2pdf()
+                .from(div)
+                .set(opt)
+                .save().then(() => {
+                    root.unmount();
+                    document.body.removeChild(div);
+                    setIsLoading(false);
+                })
+                .catch(() => {
+                    setIsLoading(false);
+                });
+        }, 1000);
+    };
+
     return (
+
         <div className="container">
 
             <div className="page-inner">
                 <div className="page-header">
                     <h3 className="fw-bold mb-3">Liste des examens disponibles</h3>
+
+                    {
+                        etuInfo && (
+                            isLoading ? (
+                                <span className='btn btn-primary btn-round btn-border ms-auto' >
+                                    <i className="fa fa-spinner fa-spin"></i> &nbsp; Telechargement...
+                                </span>
+                            ) : (
+                                <span className='btn btn-primary btn-round btn-border ms-auto'
+                                    onClick={generatePDF}>
+                                    <i className="fa fa-download"></i>&nbsp; Convocation
+                                </span>
+                            )
+                        )
+                    }
+
                 </div>
 
                 <div className="row justify-content-center align-item-center">
@@ -130,7 +243,6 @@ function ExamenContent() {
                                                     <h4 className="card-title">Examen {item.codeExam}</h4>
                                                     <div className="card-price">
                                                         <span className="text fw-bold text-secondary">{item.matiere}</span>
-
                                                     </div>
                                                 </div>
                                                 <div className="card-body">
@@ -160,7 +272,7 @@ function ExamenContent() {
                                                     ) : item.statutIns === "En attente" ? (
                                                         <div className="text-warning"><i className="fas fa-2x fa-hourglass-half"></i> <b></b></div>
                                                     ) : (
-                                                        <button onClick={() => handleInscription(matriculeEtu, item.idExam, item.dateExam, item.codeExam)} className="btn btn-primary w-100">
+                                                        <button onClick={() => handleInscription(matriculeEtu, item.idExam, item.dateExam, item.codeExam)} className="btn btn-primary w-80">
                                                             <b>Inscrire</b>
                                                         </button>
                                                     )}
@@ -171,11 +283,11 @@ function ExamenContent() {
                                     ))
                                 ) : (
                                     <div className="container text-center fw-bold"
-                                        onLoad={showMessage}
+                                        // onLoad={showMessage}
                                         style={{
-                                            fontSize: "50px"
+                                            fontSize: "30px"
                                         }}
-                                    >Aucune</div>
+                                    >Aucun examen diponible</div>
                                 )
 
                             }
@@ -185,10 +297,8 @@ function ExamenContent() {
                 </div>
             </div>
         </div>
-
-        // </div>
-        // </div>
     );
+
 }
 
 export default ExamenContent;

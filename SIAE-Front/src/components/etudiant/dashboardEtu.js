@@ -254,14 +254,14 @@ const Dashboard = () => {
                                         height="12.5"
                                         alt=""
                                     />
-                                    <h2 className="py-4 mb-0">Examens En cours</h2>
+                                    <h2 className="py-4 mb-0">Examens en cours</h2>
                                     <div className="row">
                                         <div className="col-8 pe-0">
                                             <h3 className="fw-bold mb-1">Semaine du</h3>
                                             {
                                                 minDate === "" ? (
                                                     <div className="text-md text-uppercase fw-bold op-8">
-                                                        Non identifie
+                                                        Non identifié
                                                     </div>
                                                 ) : (
                                                     <div className="text-md text-uppercase fw-bold op-8">
@@ -300,7 +300,7 @@ const Dashboard = () => {
                                     <h2 className="py-4 mb-0">Inscriptions</h2>
                                     <div className="row">
                                         <div className="col-8 pe-0">
-                                            <h3 className="fw-bold mb-1">Valide</h3>
+                                            <h3 className="fw-bold mb-1">Validé</h3>
                                             <div className="text-md text-uppercase fw-bold op-8">
                                                 .
                                             </div>
@@ -353,7 +353,7 @@ const Dashboard = () => {
                             <div className="card card-round">
                                 <div className="card-header">
                                     <div className="card-head-row">
-                                        <div className="card-title">Recentes notifications</div>
+                                        <div className="card-title">Récentes notifications</div>
                                     </div>
                                 </div>
 
@@ -401,7 +401,7 @@ const Dashboard = () => {
                                             )
                                             )
                                         ) : (
-                                            <div className="text-center muted">Aucun nouveaux notifications trouves</div>
+                                            <div className="text-center muted">Aucune nouvelle notification trouvée</div>
                                         )
 
                                     }
@@ -444,7 +444,7 @@ const Dashboard = () => {
                                                                     <td>{ex.codeExam}</td>
                                                                     <td>{formatDate2(ex.dateExam)}</td>
                                                                     <td>{ex.matiere}</td>
-                                                                    <td>{ex.heureDebut} a {ex.heureFin}</td>
+                                                                    <td>{ex.heureDebut} à {ex.heureFin}</td>
                                                                 </tr>
                                                             ))
                                                         }

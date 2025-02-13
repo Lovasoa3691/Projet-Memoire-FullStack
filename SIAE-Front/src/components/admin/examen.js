@@ -4,6 +4,10 @@ import DataTable from 'react-data-table-component';
 import axios from 'axios';
 import api from '../API/api';
 import swal from 'sweetalert';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/ReactToastify.css'
 
 function ExamenContent() {
 
@@ -63,7 +67,7 @@ function ExamenContent() {
 
                     <i className="fas fa-file-alt text-primary"
                         onClick={() => afficherListeEtudiantInscrit(row)}
-                        title="Inscriptions"
+                        title="Candidats"
                     ></i>
                     &nbsp;&nbsp;&nbsp;
                     <i className="fas fa-pen"
@@ -90,15 +94,59 @@ function ExamenContent() {
 
 
     const [search, setSearch] = useState("");
-    const [filtre, setFiltre] = useState([]);
+    const [filtre, setFiltre] = useState("");
     const [examData, setExamData] = useState([]);
+    const [DonneFiltre, setDonneFiltre] = useState([]);
+
+    // const searchChange = (e) => {
+    //     const value = e.target.value;
+    //     setSearch(value);
+
+    //     const filtrer = examData.filter((item) =>
+    //         item.codeExam.toUpperCase().includes(value.toUpperCase()) ||
+    //         item.matiere.toUpperCase().includes(value.toUpperCase()) ||
+    //         item.classe.toUpperCase().includes(value.toUpperCase())
+    //     );
+
+    //     setDonneFiltre(filtrer);
+    // }
+
+    const searchChange = (e) => {
+        const value = e.target.value;
+        setSearch(value);
+
+        const filtrer = examData.filter((item) =>
+            (item.codeExam && String(item.codeExam).toUpperCase().includes(value.toUpperCase())) ||
+            (item.matiere && String(item.matiere).toUpperCase().includes(value.toUpperCase())) ||
+            (item.statut && String(item.statut).toUpperCase().includes(value.toUpperCase())) ||
+            (item.classe && (
+                Array.isArray(item.classe)
+                    ? item.classe.some(classeItem => String(classeItem).toUpperCase().includes(value.toUpperCase()))
+                    : String(item.classe).toUpperCase().includes(value.toUpperCase())
+            ))
+        );
+
+        setDonneFiltre(filtrer);
+    };
+
+
+    // const filtreChange = (e) => {
+    //     const { name, value } = e.target;
+    //     setFiltre({ ...filtre, [name]: value });
+
+    //     const filtrer = examData.filter(item =>
+    //         (item.codeExam.toUpperCase().includes(filtre.codeExam.toUpperCase())) ||
+    //         (item.matiere.toUpperCase().includes(filtre.matiere.toUpperCase())) ||
+    //         (item.classe.toUpperCase().includes(filtre.classe.toUpperCase()))
+    //     );
+    //     setDonneFiltre(filtrer);
+    // }
 
     const generateMentions = (categories, levels) => {
         return categories.flatMap(category =>
             levels.map(level => ({ code: `${category} ${level}` }))
         );
     };
-
 
     const [mention1, setMention1] = useState(
         generateMentions(["INFO", "BTP", "DROIT", "GM", "ICJ"], ["L1"])
@@ -158,16 +206,19 @@ function ExamenContent() {
         api.get('/examens/all')
             .then((rep) => {
                 setExamData(rep.data.examens);
+                setDonneFiltre(rep.data.examens);
                 // setFiltre(rep.data);
             })
             .catch(error => {
-                console.log("Erreur lors de la recuperation des donnees: ", error);
+                console.log("Erreur lors de la récuperation des données: ", error);
             })
     };
 
-    useEffect(() => {
-        chargerExamens();
-    }, []);
+    // useEffect(() => {
+    //     chargerExamens();
+    // }, []);
+
+    const [isLoading, setLoading] = useState(false);
 
     const saveExamen = (e) => {
         e.preventDefault();
@@ -176,6 +227,7 @@ function ExamenContent() {
         // // console.log(examenForm)
         api.post('/examens/save', examenForm)
             .then((rep) => {
+                setLoading(true);
                 // console.log(rep.data)
                 if (rep.data.succes) {
                     setVisible(false)
@@ -186,6 +238,27 @@ function ExamenContent() {
                         timer: 1500
                     },
                     )
+                    setLoading(false);
+                    // showToast()
+                    if (rep.data.mail) {
+                        toast.success("Notification envoié !", {
+                            position: 'top-right',
+                            autoClose: 4000,
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true
+                        });
+                    } else {
+                        toast.error("Impossible d'envoyer l'email, problème de connexion !", {
+                            position: 'top-right',
+                            autoClose: 4000,
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true
+                        });
+                    }
                 }
                 else {
                     swal({
@@ -237,7 +310,7 @@ function ExamenContent() {
 
         swal({
             title: "Annulation",
-            text: "Vous etes sur de vouloir annule cet examen ?",
+            text: "Vous êtes sûr de vouloir annulé cet examen ?",
             icon: "warning",
             buttons: {
                 confirm: {
@@ -251,8 +324,8 @@ function ExamenContent() {
                 }
             },
             // dangerMode: true,
-        }).then((willDelete) => {
-            if (willDelete) {
+        }).then((confirm) => {
+            if (confirm) {
                 api.put(`/examens/update/statut/${data.idExam}`)
                     .then((rep) => {
                         if (rep.data.succes) {
@@ -263,6 +336,29 @@ function ExamenContent() {
                                 timer: 1500
                             },
                             )
+
+                            // console.log(rep.data.mail)
+
+                            if (rep.data.mail) {
+                                toast.success("Notification envoié !", {
+                                    position: 'top-right',
+                                    autoClose: 4000,
+                                    hideProgressBar: false,
+                                    closeOnClick: true,
+                                    pauseOnHover: true,
+                                    draggable: true
+                                });
+                            } else {
+                                toast.erreur("Impossible d'envoyer l'email, problème de connexion !", {
+                                    position: 'top-right',
+                                    autoClose: 4000,
+                                    hideProgressBar: false,
+                                    closeOnClick: true,
+                                    pauseOnHover: true,
+                                    draggable: true
+                                });
+                            }
+                            // showToast();
                         }
                         else {
                             swal({
@@ -286,9 +382,20 @@ function ExamenContent() {
 
     }
 
+    const showToast = () => {
+        toast.success("Notification envoié !", {
+            position: 'top-right',
+            autoClose: 4000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true
+        });
+    }
+
     const supprimeExamen = (data) => {
         if (data.statut === "En cours") {
-            swal("Desole ! Vous ne pouvez pas supprimer un examen en cours!", {
+            swal("Desolé ! Vous ne pouvez pas supprimer un examen en cours!", {
                 title: 'Interruption',
                 icon: "warning",
                 buttons: {
@@ -300,7 +407,7 @@ function ExamenContent() {
         } else {
             swal({
                 title: "Etes-vous sur?",
-                text: "Une fois supprime, vous ne pourrez plus recuperer ce fichier !",
+                text: "Une fois supprimé, vous ne pourrez plus récuperer cet information !",
                 icon: "warning",
                 buttons: {
                     confirm: {
@@ -392,8 +499,6 @@ function ExamenContent() {
 
     const handleChangeData = (e) => {
         const { name, value, type } = e.target;
-
-
         if (type === "time" && (name === "heureDebut" || name === "heureFin")) {
             if (value < "06:00") {
                 setExamenForm({ ...examenForm, [name]: "06:00" });
@@ -403,12 +508,8 @@ function ExamenContent() {
                 return;
             }
         }
-
-
         setExamenForm({ ...examenForm, [name]: value });
     };
-
-
 
     const formatDate = (dateString) => {
         const date = new Date(dateString); // Conversion si nécessaire
@@ -422,7 +523,7 @@ function ExamenContent() {
     const openModalEdit = (data) => {
         setVisible(true)
         setIsEdit(true);
-        setBtnLabel('Mettre a jour');
+        setBtnLabel('Mettre à jour');
 
         examenForm.idExam = data.idExam
         examenForm.codeExam = data.codeExam
@@ -498,16 +599,70 @@ function ExamenContent() {
         }
     }
 
+    const verifieEtatExamen = async () => {
+        await api.get('/updateExamStatus')
+            .then((rep) => {
+                if (rep.data.succes) {
+                    console.log(rep.data.examMiseAJour)
+                    const resultat = rep.data.examMiseAJour;
+                    if (resultat.length > 0) {
+                        chargerExamens();
+                    } else {
+                        console.log("Aucun examen à mettre à jour")
+                    }
+                }
+            })
+            .catch((error) => {
+                console.error('Erreur:', error);
+            })
+    }
+
+
+
+    const ImprimerEtudiantsPDF = () => {
+        const doc = new jsPDF();
+
+        if (etudiantIsncrit && etudiantIsncrit.length > 0) {
+            const colonnes = ["MATRICULE", "NOM & PRENOM", "MENTION", "NIVEAU"];
+            const ligne = etudiantIsncrit.map((ligne) => [ligne.matricule, `${ligne.nomEtu} ${ligne.prenomEtu}`, ligne.mention, ligne.niveau]);
+            doc.text(`Liste des étudiants inscrit(e)s à l'examen ${matiere} de la session ${session}`, 15, 10);
+            doc.autoTable({
+                head: [colonnes],
+                body: ligne,
+                startY: 20,
+            });
+            doc.save(`liste_etudiant_inscrit_${matiere}.pdf`);
+        } else {
+            swal({
+                text: `Desolé! Aucune liste à imprimer`,
+                icon: "error",
+                buttons: false,
+                timer: 1500
+            },
+            )
+        }
+    }
+
     useEffect(() => {
         chargerSalles();
+    }, []);
+
+    useEffect(() => {
+        chargerExamens();
+        const interval = setInterval(() => {
+            verifieEtatExamen();
+        }, 30000);
+        return () => clearInterval(interval);
     }, []);
 
     return (
         <div className="container">
 
+            <ToastContainer />
+
             <div className="page-inner">
                 <div className="page-header">
-                    <h3 className="fw-bold mb-3">Liste des sessions d'examens mises en place</h3>
+                    <h3 className="fw-bold mb-3">Liste des sessions d'examen mises en place</h3>
                 </div>
 
 
@@ -521,9 +676,8 @@ function ExamenContent() {
                                         <input
                                             type='text'
                                             placeholder='Recherche'
-                                            // value={search}
-                                            // onChange={(e) => setSearch(e.target.value)}
-
+                                            value={search}
+                                            onChange={searchChange}
                                             style={{
                                                 padding: '7px',
                                                 width: '300px',
@@ -540,7 +694,7 @@ function ExamenContent() {
                                     // data-bs-target="#addRowModal"
                                     >
                                         <i className="fa fa-plus">&nbsp;&nbsp;</i>
-                                        Creer Session
+                                        Créer Session
                                     </button>
                                 </div>
                             </div>
@@ -562,8 +716,8 @@ function ExamenContent() {
                                                     <div className="modal-content">
                                                         <div className="modal-header border-0">
                                                             <h5 className="modal-title">
-                                                                <span className="fw-mediumbold"> Nouvelle</span>
-                                                                <span className="fw-light"> Enregistrement </span>
+                                                                <span className="fw-mediumbold"> Nouvel</span>
+                                                                <span className="fw-light"> enregistrement </span>
                                                             </h5>
                                                             <i className='fas fa-times fa-2x text-danger' onClick={closeModal}></i>
                                                         </div>
@@ -626,7 +780,7 @@ function ExamenContent() {
                                                                 </div>
                                                                 <div className="col-md-6 pe-0">
                                                                     <div className="form-group">
-                                                                        <label>Heure debut</label>
+                                                                        <label>Heure début</label>
                                                                         <input
                                                                             onChange={handleChangeData}
                                                                             value={examenForm.heureDebut}
@@ -654,7 +808,7 @@ function ExamenContent() {
                                                                 </div>
                                                                 <div className="col-sm-12">
                                                                     <div className="form-group">
-                                                                        <label>Matiere</label>
+                                                                        <label>Matière</label>
                                                                         <input
                                                                             onChange={handleChangeData}
                                                                             value={examenForm.matiere}
@@ -678,7 +832,7 @@ function ExamenContent() {
 
                                                                 <div className="col-sm-12">
                                                                     <div className="form-group">
-                                                                        <label className="form-label">Classe concernee</label>
+                                                                        <label className="form-label">Classe concernée</label>
                                                                         <div className="selectgroup selectgroup-pills">
                                                                             {
                                                                                 examenForm.codeExam === "S1" || examenForm.codeExam === "S2" ? (
@@ -776,6 +930,7 @@ function ExamenContent() {
                                                             <button
                                                                 type="submit"
                                                                 className="btn btn-success"
+                                                            // disabled={isLoading}
                                                             >
                                                                 <i className='fas fa-save'></i> &nbsp;&nbsp;
                                                                 Enregistrer
@@ -785,6 +940,7 @@ function ExamenContent() {
                                                                 className="btn btn-danger"
                                                                 data-dismiss="modal"
                                                                 onClick={closeModal}
+                                                            // disabled={isLoading}
                                                             >
                                                                 <i className='fas fa-times'></i>&nbsp;&nbsp;
                                                                 Fermer
@@ -813,32 +969,34 @@ function ExamenContent() {
                                                     <div className="modal-header border-0">
                                                         <h5 className="modal-title">
                                                             <span className="fw-mediumbold"> </span>
-                                                            <span className="fw-light"> Liste des etudiants inscrites a l'examen {matiere} du session {session} </span>
+                                                            <span className="fw-light"> Liste des étudiants inscrit(e)s à l'examen {matiere} de la session {session} </span>
                                                         </h5>
                                                         <i className='fas fa-times fa-2x text-danger' onClick={closeListModal}></i>
                                                     </div>
                                                     <div className="modal-body">
                                                         <div className="row">
-                                                            <div className="table-responsive">
-                                                                <div className="col-md-12">
+                                                            {/* <div className="table-responsive"> */}
+                                                            <div className="col-md-12">
 
-                                                                    {/* <div className="card"> */}
-                                                                    {/* <div className="card-header">
+                                                                {/* <div className="card"> */}
+                                                                {/* <div className="card-header">
                                                                         <div className="card-title">Journal de mes examens</div>
                                                                     </div> */}
-                                                                    <div className="card-body">
-                                                                        <table className="table table-bordered table-head-bg-info table-bordered-bd-info mt-4">
-                                                                            <thead>
-                                                                                <tr className='text-center'>
-                                                                                    <th scope='col'>Matricule</th>
-                                                                                    <th scope="col">Nom & Prenom</th>
-                                                                                    <th scope="col">Mention</th>
-                                                                                    <th scope="col">Niveau</th>
-                                                                                </tr>
-                                                                            </thead>
-                                                                            <tbody className='text-center'>
-                                                                                {
-                                                                                    etudiantIsncrit && etudiantIsncrit.length > 0 ? (
+
+                                                                {
+                                                                    etudiantIsncrit && etudiantIsncrit.length > 0 ? (
+                                                                        <div className="card-body">
+                                                                            <table className="table table-bordered table-head-bg-info table-bordered-bd-info mt-4">
+                                                                                <thead>
+                                                                                    <tr className='text-center'>
+                                                                                        <th scope='col'>Matricule</th>
+                                                                                        <th scope="col">Nom & Prenom</th>
+                                                                                        <th scope="col">Mention</th>
+                                                                                        <th scope="col">Niveau</th>
+                                                                                    </tr>
+                                                                                </thead>
+                                                                                <tbody className='text-center'>
+                                                                                    {
                                                                                         etudiantIsncrit.map(item => (
                                                                                             <tr key={item.matricule}>
                                                                                                 <td>{item.matricule}</td>
@@ -847,24 +1005,27 @@ function ExamenContent() {
                                                                                                 <td>{item.niveau}</td>
                                                                                             </tr>
                                                                                         ))
-                                                                                    ) : (
-                                                                                        <div className='text-center'>Aucun etudiant inscrit</div>
-                                                                                    )
-                                                                                }
-
-                                                                            </tbody>
-                                                                        </table>
-                                                                    </div>
+                                                                                    }
 
 
-                                                                </div>
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className='text-center fw-bold' style={{ fontSize: '20px' }}>Aucun candidat inscrit à cet examen</div>
+                                                                    )
+                                                                }
+
+
                                                             </div>
+                                                            {/* </div> */}
                                                         </div>
                                                     </div>
                                                     <div className="modal-footer border-0">
                                                         <button
                                                             type="button"
                                                             className="btn btn-primary btn-border"
+                                                            onClick={ImprimerEtudiantsPDF}
                                                         >
                                                             <i className='fas fa-print'></i> &nbsp;&nbsp;
                                                             Imprimer
@@ -896,11 +1057,11 @@ function ExamenContent() {
                                     <DataTable
                                         className="table table-hover"
                                         columns={colonne}
-                                        data={examData}
+                                        data={DonneFiltre}
                                         pagination
                                         highlightOnHover
                                         fixedHeader
-                                        fixedHeaderScrollHeight='300px'
+                                        // fixedHeaderScrollHeight='300px'
                                         noDataComponent="Aucune donnee disponible"
                                         paginationComponentOptions={paginationComponentOptions}
                                         // striped
